@@ -73,7 +73,7 @@ public class Percolation {
 	public boolean isFull(int i, int j) {
 		// is site (row i, column j) full?
 		checkBounds(i, j);
-		return find(getUFIndex(i, j), topIndex);
+		return isOpen(i,j) && find(getUFIndex(i, j), topIndex);
 	}
 
 	public boolean percolates() {
