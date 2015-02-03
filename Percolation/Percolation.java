@@ -1,33 +1,34 @@
+
 public class Percolation {
 
 	private final boolean[][] grid;
-//	private final boolean[][] isFullGrid;
 
-	private final int[] unionFindArray;
-	private final int[] sizes;
+//	private final int[] unionFindArray;
+//	private final int[] isFullArray;
 
 	private final int topIndex;
 	private final int bottomIndex;
 	private final int n;
 	
 	private final WeightedQuickUnionUF uf;
+	private final WeightedQuickUnionUF isFullUf;
 	
 	public Percolation(int N) {
 		if (N <= 0) {
 			throw new IllegalArgumentException("N must be greather than 0");
 		}
 		grid = new boolean[N][N];
-//		isFullGrid = new boolean[N][N];
-		unionFindArray = new int[N * N + 2];
-		for (int i = 0; i < unionFindArray.length; i++) {
-			unionFindArray[i] = i;
-		}
-		sizes = new int[N * N + 2];
+//		unionFindArray = new int[N * N + 2];
+//		for (int i = 0; i < unionFindArray.length; i++) {
+//			unionFindArray[i] = i;
+//		}
+//		isFullArray = Arrays.copyOf(unionFindArray, unionFindArray.length);
 		topIndex = N * N;
 		bottomIndex = N * N + 1;
 		this.n = N;
 		
 		uf = new WeightedQuickUnionUF(N*N + 2);
+		isFullUf = new WeightedQuickUnionUF(N*N + 2);
 		
 		//connect top and bottom elements
 //		int row = 1;
@@ -50,6 +51,7 @@ public class Percolation {
 		int ufIndex = getUFIndex(i, j);
 		if (i == 1) {
 			uf.union(ufIndex, topIndex);
+			isFullUf.union(ufIndex, topIndex);
 		}
 		if (i == n) {
 			uf.union(ufIndex, bottomIndex);
@@ -59,6 +61,7 @@ public class Percolation {
 				try {
 					if (isOpen(i + rowMod, j)) {
 						uf.union(getUFIndex(i + rowMod, j), ufIndex);
+						isFullUf.union(getUFIndex(i + rowMod, j), ufIndex);
 					}
 				} catch (IndexOutOfBoundsException e) {
 					// skip
@@ -70,6 +73,7 @@ public class Percolation {
 				try {
 					if (isOpen(i, j + colMod)) {
 						uf.union(getUFIndex(i, j + colMod), ufIndex);
+						isFullUf.union(getUFIndex(i, j + colMod), ufIndex);
 					}
 				} catch (IndexOutOfBoundsException e) {
 					// skip
@@ -88,7 +92,7 @@ public class Percolation {
 	public boolean isFull(int i, int j) {
 		// is site (row i, column j) full?
 		checkBounds(i, j);
-		return isOpen(i,j) && uf.find(getUFIndex(i, j)) == uf.find(topIndex);
+		return isOpen(i,j) && isFullUf.connected(getUFIndex(i, j),topIndex);
 	}
 
 	public boolean percolates() {
@@ -108,6 +112,10 @@ public class Percolation {
 
 	private int getUFIndex(int i, int j) {
 		return (i - 1) * n + j - 1;
+	}
+	
+	private boolean isBottomRow(int i) {
+		return n*n - 1 - i < n;
 	}
 
 //	private boolean find(int p, int q) {
