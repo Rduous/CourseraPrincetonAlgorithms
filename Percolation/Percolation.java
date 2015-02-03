@@ -1,6 +1,7 @@
 public class Percolation {
 
 	private final boolean[][] grid;
+//	private final boolean[][] isFullGrid;
 
 	private final int[] unionFindArray;
 	private final int[] sizes;
@@ -9,11 +10,14 @@ public class Percolation {
 	private final int bottomIndex;
 	private final int n;
 	
+	private final WeightedQuickUnionUF uf;
+	
 	public Percolation(int N) {
 		if (N <= 0) {
 			throw new IllegalArgumentException("N must be greather than 0");
 		}
 		grid = new boolean[N][N];
+//		isFullGrid = new boolean[N][N];
 		unionFindArray = new int[N * N + 2];
 		for (int i = 0; i < unionFindArray.length; i++) {
 			unionFindArray[i] = i;
@@ -22,6 +26,8 @@ public class Percolation {
 		topIndex = N * N;
 		bottomIndex = N * N + 1;
 		this.n = N;
+		
+		uf = new WeightedQuickUnionUF(N*N + 2);
 		
 		//connect top and bottom elements
 //		int row = 1;
@@ -43,16 +49,16 @@ public class Percolation {
 		// check neighbors
 		int ufIndex = getUFIndex(i, j);
 		if (i == 1) {
-			union(ufIndex, topIndex);
+			uf.union(ufIndex, topIndex);
 		}
 		if (i == n) {
-			union(ufIndex, bottomIndex);
+			uf.union(ufIndex, bottomIndex);
 		}
 		for (int rowMod = -1; rowMod < 2; rowMod += 2) {
 			if (rowMod != 0) {
 				try {
 					if (isOpen(i + rowMod, j)) {
-						union(getUFIndex(i + rowMod, j), ufIndex);
+						uf.union(getUFIndex(i + rowMod, j), ufIndex);
 					}
 				} catch (IndexOutOfBoundsException e) {
 					// skip
@@ -63,7 +69,7 @@ public class Percolation {
 			if (colMod != 0) {
 				try {
 					if (isOpen(i, j + colMod)) {
-						union(getUFIndex(i, j + colMod), ufIndex);
+						uf.union(getUFIndex(i, j + colMod), ufIndex);
 					}
 				} catch (IndexOutOfBoundsException e) {
 					// skip
@@ -82,11 +88,11 @@ public class Percolation {
 	public boolean isFull(int i, int j) {
 		// is site (row i, column j) full?
 		checkBounds(i, j);
-		return isOpen(i,j) && find(getUFIndex(i, j), topIndex);
+		return isOpen(i,j) && uf.find(getUFIndex(i, j)) == uf.find(topIndex);
 	}
 
 	public boolean percolates() {
-		return find(topIndex, bottomIndex);
+		return uf.connected(topIndex, bottomIndex);
 	}
 
 	public static void main(String[] args) {
@@ -104,31 +110,31 @@ public class Percolation {
 		return (i - 1) * n + j - 1;
 	}
 
-	private boolean find(int p, int q) {
-		int pid = getRoot(p);
-		int qid = getRoot(q);
-		return pid == qid;
-	}
-
-	private void union(int p, int q) {
-		int i = getRoot(p);
-		int j = getRoot(q);
-		if (sizes[i] >= sizes[j]) {
-			unionFindArray[j] = i;
-			sizes[i] += sizes[j];
-		} else {
-			unionFindArray[i] = j;
-			sizes[j] += sizes[i];
-		}
-	}
-
-	private int getRoot(int i) {
-		while (i != unionFindArray[i]) {
-			unionFindArray[i] = unionFindArray[unionFindArray[i]];
-			i = unionFindArray[i];
-		}
-		return i;
-	}
+//	private boolean find(int p, int q) {
+//		int pid = getRoot(p);
+//		int qid = getRoot(q);
+//		return pid == qid;
+//	}
+//
+//	private void union(int p, int q) {
+//		int i = getRoot(p);
+//		int j = getRoot(q);
+//		if (sizes[i] >= sizes[j]) {
+//			unionFindArray[j] = i;
+//			sizes[i] += sizes[j];
+//		} else {
+//			unionFindArray[i] = j;
+//			sizes[j] += sizes[i];
+//		}
+//	}
+//
+//	private int getRoot(int i) {
+//		while (i != unionFindArray[i]) {
+//			unionFindArray[i] = unionFindArray[unionFindArray[i]];
+//			i = unionFindArray[i];
+//		}
+//		return i;
+//	}
 
 }
 
