@@ -24,21 +24,30 @@ public class Percolation {
 		this.n = N;
 		
 		//connect top and bottom elements
-		for(int i=0; i<n; i++) {
-			union(topIndex,i);
-		}
-		for (int i = n*(n-1)-1; i < n*n; i++) {
-			union(bottomIndex,i);
-		}
+//		int row = 1;
+//		for(int col=1; col<=n; col++) {
+//			union(topIndex,getUFIndex(row, col));
+//		}
+//		row = n;
+//		for(int col=1; col<=n; col++) {
+//			union(bottomIndex,getUFIndex(row, col));
+//		}
 	}
 
 	public void open(int i, int j) {
 		// open site (row i, column j) if it is not open already
 		checkBounds(i, j);
 		grid[i - 1][j - 1] = true;
+		
 
 		// check neighbors
 		int ufIndex = getUFIndex(i, j);
+		if (i == 1) {
+			union(ufIndex, topIndex);
+		}
+		if (i == n) {
+			union(ufIndex, bottomIndex);
+		}
 		for (int rowMod = -1; rowMod < 2; rowMod += 2) {
 			if (rowMod != 0) {
 				try {
