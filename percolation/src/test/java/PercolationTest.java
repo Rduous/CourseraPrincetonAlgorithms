@@ -141,6 +141,37 @@ public class PercolationTest {
 		assertTrue(p.percolates());
 		assertFalse(p.isFull(3, 3));
 	}
+	
+	/*
+	 *
+	 *  x  x  x  x  1  x
+	 *  x  x  x  x  2  x
+	 *  10 9  8  x  3  x
+	 *  11 x  7  x  4  x
+	 *  12 x  6  5  14 x
+	 *  13 x  x  x  x  x
+	 * 
+	 * Opening in this order, the system should not percolate until the
+	 * 14th cell is opened
+	 * 
+	 */
+	@Test
+	public void checkNeighborsGetConnectedCorrectly() {
+		int[][] coords = new int[][] { {1,5}, {2,5},{3,5},{4,5},{5,4}, {5,3}, {4,3}, {3,3},{3,2},{3,1},
+				{4,1},{5,1},{6,1}};
+		Percolation p = new Percolation(6);
+		for (int i = 0; i < coords.length; i++) {
+			int[] coord = coords[i];
+			p.open(coord[0], coord[1]);
+			assertFalse("System percolates after " + (i + 1) + " cells are opened; it shouldn't.", p.percolates());
+		}
+		p.open(5, 5);
+		assertTrue(p.percolates());
+		for (int i = 0; i < coords.length; i++) {
+			int[] coord = coords[i];
+			assertTrue(p.isFull(coord[0], coord[1]));
+		}
+	}
 
 	private void checkIsOpenCornerCase(Percolation p, String message, int row,
 			int col) {
