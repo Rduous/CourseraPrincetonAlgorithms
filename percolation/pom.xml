@@ -9,6 +9,11 @@
     
     <dependencies>
         <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+        </dependency>
+        <dependency>
             <groupId>edu.princeton</groupId>
             <artifactId>stdlib</artifactId>
             <version>1.0.0</version>
