@@ -8,7 +8,7 @@ public class Percolation {
 	/*
 	 * Grid to track open/close status of cells
 	 */
-	private final boolean[][] isOpenGrid;
+	private final boolean[] isOpenArray;
 
 	/*
 	 * Convenient values
@@ -31,8 +31,8 @@ public class Percolation {
 			throw new IllegalArgumentException("N must be greather than 0");
 		}
 		this.n = N;
-		isOpenGrid = new boolean[n][n];
 		int totalNumElts = n * n + 2;
+		isOpenArray = new boolean[totalNumElts - 2];
 		topIndex = totalNumElts - 2;
 		bottomIndex = totalNumElts - 1;
 
@@ -47,8 +47,9 @@ public class Percolation {
 	 */
 	public void open(int i, int j) {
 		checkBounds(i, j);
-		isOpenGrid[i - 1][j - 1] = true;
+		
 		int ufIndex = getUFIndex(i, j);
+		isOpenArray[ufIndex] = true;
 
 		// connect top and bottom elts, if appropriate
 		if (i == 1) { // is top row
@@ -85,7 +86,11 @@ public class Percolation {
 	 */
 	public boolean isOpen(int i, int j) {
 		checkBounds(i, j);
-		return isOpenGrid[i - 1][j - 1];
+		return isOpen(getUFIndex(i, j));
+	}
+	
+	private boolean isOpen(int ufId) {
+		return isOpenArray[ufId];
 	}
 
 	/**
