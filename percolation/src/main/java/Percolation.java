@@ -9,15 +9,12 @@ public class Percolation {
 
 	private static final int IS_OPEN_INDEX = 0;
 	private static final int IS_CONNECTED_TO_TOP_INDEX = 1;
-	private static final int IS_CONNECTED_TO_BOTTOM_INDEX = 2;
 
 	private static final int IS_OPEN = 1;
 	private static final int IS_CONNECTED_TO_TOP = 2;
 	private static final int IS_CONNECTED_TO_BOTTOM = 4;
 	
-	private static final int PERCOLATES_MASK = 5;
-	
-	private final int[] openFullArray;
+	private static final int PERCOLATES_MASK = 6;
 	
 	private boolean percolates = false;
 
@@ -31,6 +28,14 @@ public class Percolation {
 	 * Union-find impl to track whether overall system percolates
 	 */
 	private final WeightedQuickUnionUF percolatesUf;
+	
+	/*
+	 * An array of ints used w/bitmasks to track:
+	 * byte 0: open/closed status
+	 * byte 1: connected-to-top status
+	 * byte 2: connected-to-bottom status
+	 */
+	private final int[] openFullArray;
 	
 
 	public Percolation(int N) {
@@ -57,19 +62,13 @@ public class Percolation {
 		// connect top and bottom elts, if appropriate, and track their statuses
 		int[] roots = new int[4];
 		Arrays.fill(roots, -1);
-		int[][] neighbors = new int[][] {{i-1,j},{i+1,j},{i,j-1},{i,j+1}};
-		
-		for (int k = 0; k < neighbors.length; k++) {
-			int[] coord = neighbors[k];
-			int row = coord[0];
-			int col = coord[1];int neighbor = getUFIndex(row, col);
-			if ( row > 0 && col > 0 && row <= n && col <= n && isBitOpenAt(neighbor, IS_OPEN_INDEX)) {
-				roots[k] = percolatesUf.find(neighbor);
-				percolatesUf.union(ufIndex, neighbor);
-			}
-		}
+		unionWithNeighborIfOpen(ufIndex, roots, 0, i-1, j);
+		unionWithNeighborIfOpen(ufIndex, roots, 1, i+1, j);
+		unionWithNeighborIfOpen(ufIndex, roots, 2, i, j-1);
+		unionWithNeighborIfOpen(ufIndex, roots, 3, i, j+1);
+
 		int newRoot = percolatesUf.find(ufIndex);
-		for (int k = 0; k < neighbors.length; k++) {
+		for (int k = 0; k < roots.length; k++) {
 			int neighborRoot = roots[k];
 			if (neighborRoot != -1 ) {
 				openFullArray[newRoot] = openFullArray[newRoot] | openFullArray[roots[k]];
@@ -83,15 +82,27 @@ public class Percolation {
 			openFullArray[newRoot] = openFullArray[newRoot] | IS_CONNECTED_TO_BOTTOM;
 		}
 		
-		percolates = percolates || (isBitOpenAt(newRoot, IS_CONNECTED_TO_TOP_INDEX) && isBitOpenAt(newRoot, IS_CONNECTED_TO_BOTTOM_INDEX));
+		percolates = percolates || (openFullArray[newRoot] & PERCOLATES_MASK) == PERCOLATES_MASK;
 	}
-	
-//	private void openBitAt(int[] bitTrackers, int ufIndex) {
-//		int bitContainer = ufIndex / INTEGER_BITS;
-//		int bitNumber = ufIndex % INTEGER_BITS;
-//		isOpenBits[bitContainer] = isOpenBits[bitContainer] | (int) Math.pow(2, bitNumber);
-//				
-//	}
+
+	/**
+	 * Checks the cell at given row and column.  If it is open, union that cell with the elt,
+	 * and record the cell's root in the roots array.
+	 * @param elt
+	 * @param roots the roots of open neighbors of elt
+	 * @param k the index at which to store the root
+	 * @param neighborRow
+	 * @param neighborCol
+	 */
+	private void unionWithNeighborIfOpen(int elt, int[] roots, int k, int neighborRow,
+			int neighborCol) {
+		int neighbor = getUFIndex(neighborRow, neighborCol);
+		if ( neighborRow > 0 && neighborCol > 0 && neighborRow <= n && neighborCol <= n && isBitOpenAt(neighbor, IS_OPEN_INDEX)) {
+			int root = percolatesUf.find(neighbor);
+			roots[k] = root;
+			percolatesUf.union(elt, root);
+		}
+	}
 
 	/**
 	 * @param i row number (1-indexed)
