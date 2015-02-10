@@ -7,7 +7,9 @@ import java.util.Arrays;
  */
 public class Percolation {
 	
-	private static final int INTEGER_BITS = 10;
+	private static final int INTEGER_BITS = 31;
+	private static final int NUMBER_OF_PROPERTIES_TRACKED = 3;
+	private static final int ELTS_IN_SINGLE_INT = INTEGER_BITS / NUMBER_OF_PROPERTIES_TRACKED;
 
 	private static final int IS_OPEN_INDEX = 0;
 	private static final int IS_CONNECTED_TO_TOP_INDEX = 1;
@@ -16,6 +18,7 @@ public class Percolation {
 	private static final int IS_OPEN = 1;
 	private static final int IS_CONNECTED_TO_TOP = 2;
 	private static final int IS_CONNECTED_TO_BOTTOM = 4;
+	private static final int ALL_TRUE = 7;
 	
 	private boolean percolates = false;
 
@@ -45,7 +48,7 @@ public class Percolation {
 		}
 		this.n = N;
 		totalNumElts = n * n ;
-		openFullArray = new int[(totalNumElts) / INTEGER_BITS  + 1];
+		openFullArray = new int[(totalNumElts) / ELTS_IN_SINGLE_INT  + 1];
 
 		percolatesUf = new WeightedQuickUnionUF(totalNumElts);
 	}
@@ -73,50 +76,70 @@ public class Percolation {
 			int neighborRoot = roots[k];
 			if (neighborRoot != -1 ) {
 				unionIntoRoot(newRoot, roots[k]);
-//				openFullArray[newRoot] = openFullArray[newRoot] | openFullArray[roots[k]];
 			}
 		}
 		applyMask(ufIndex, IS_OPEN);
-//		openFullArray[ufIndex] = openFullArray[ufIndex] | IS_OPEN;
 		if (i == 1) {
 			applyMask(newRoot, IS_CONNECTED_TO_TOP);
-//			openFullArray[newRoot] = openFullArray[newRoot] | IS_CONNECTED_TO_TOP;
 		}
 		if (i == n) { 
 			applyMask(newRoot, IS_CONNECTED_TO_BOTTOM);
-//			openFullArray[newRoot] = openFullArray[newRoot] | IS_CONNECTED_TO_BOTTOM;
 		}
-//		printStatus();
-		percolates = percolates || (isBitOpenAt(newRoot, IS_CONNECTED_TO_TOP_INDEX) && isBitOpenAt(newRoot, IS_CONNECTED_TO_BOTTOM_INDEX));
+		percolates = percolates || (isBitOpenAt(newRoot, IS_CONNECTED_TO_TOP_INDEX) && 
+				isBitOpenAt(newRoot, IS_CONNECTED_TO_BOTTOM_INDEX));
 	}
 
-	private void printStatus() {
-		for(int bits : openFullArray) {
-			System.out.print(Integer.toString(bits, 2) + " ");
-		}
-		System.out.print("\n");
+	/**
+	 * @param i row number (1-indexed)
+	 * @param j col number (1-indexed)
+	 * @return value indicating whether this coordinate is open
+	 */
+	public boolean isOpen(int i, int j) {
+		checkBounds(i, j);
+		return isBitOpenAt(getUFIndex(i, j), IS_OPEN_INDEX);
+	}
+
+	/**
+	 * Returns a boolean representing whether the given coordinate is connected
+	 * to the top of the grid.
+	 * 
+	 * @param i row number (1-indexed)
+	 * @param j col number (1-indexed)
+	 */
+	public boolean isFull(int i, int j) {
+		checkBounds(i, j);
+		int root = percolatesUf.find(getUFIndex(i, j));
+		return isBitOpenAt(root, IS_CONNECTED_TO_TOP_INDEX);
+	}
+
+	public boolean percolates() {
+		return percolates;
+	}
+	
+	private int getIntContainerIndex(int ufIndex) {
+		return ufIndex / ELTS_IN_SINGLE_INT;
+	}
+	
+	private int getIndexOfEltInContainer(int ufIndex) {
+		return ( ufIndex % ELTS_IN_SINGLE_INT ) * NUMBER_OF_PROPERTIES_TRACKED; 
 	}
 	
 	private void unionIntoRoot(int rootIndex, int otherIndex) {
-		int container1 = rootIndex / INTEGER_BITS;
-		int container2 = otherIndex / INTEGER_BITS;
+		int container1 = getIntContainerIndex(rootIndex);
+		int container2 = getIntContainerIndex(otherIndex);
 		
-		int bitNum1 = (rootIndex % INTEGER_BITS) * 3;
-		int bitNum2 = (otherIndex % INTEGER_BITS) * 3;
+		int bitNum1 = getIndexOfEltInContainer(rootIndex);
+		int bitNum2 = getIndexOfEltInContainer(otherIndex);
 		
-		int mask = 7 << bitNum2;
+		int mask = ALL_TRUE << bitNum2;
 		int masked_n = openFullArray[container2] & mask;
 		int value = masked_n >> bitNum2;
-//		System.out.println("Other mask: " + Integer.toString(mask,2));
-//		System.out.println("Masked value: " + Integer.toString(masked_n,2));
-//		System.out.println("Target mask: " + Integer.toString((value << bitNum1), 2));
-//		System.out.println("Value after union: " + Integer.toString(openFullArray[container1] | (value << bitNum1), 2));
 		openFullArray[container1] = openFullArray[container1] | ( value << bitNum1);
 	}
 	
 	private void applyMask(int ufIndex, int mask) {
-		int container = ufIndex / INTEGER_BITS;
-		int bitNum = (ufIndex % INTEGER_BITS) * 3;
+		int container = getIntContainerIndex(ufIndex);
+		int bitNum = getIndexOfEltInContainer(ufIndex);
 		int shiftedMask = mask << bitNum;
 		openFullArray[container] = openFullArray[container] | shiftedMask;
 	}
@@ -139,47 +162,13 @@ public class Percolation {
 			percolatesUf.union(elt, root);
 		}
 	}
-
-	/**
-	 * @param i row number (1-indexed)
-	 * @param j col number (1-indexed)
-	 * @return value indicating whether this coordinate is open
-	 */
-	public boolean isOpen(int i, int j) {
-		checkBounds(i, j);
-//		int root = percolatesUf.find(getUFIndex(i, j));
-		return isBitOpenAt(getUFIndex(i, j), IS_OPEN_INDEX);
-	}
 	
 	private boolean isBitOpenAt(int ufIndex, int propertyIndex) {
-		int container = ufIndex / INTEGER_BITS;
-//		System.out.println(Integer.toString(openFullArray[container],2));
-		int bitIndex = ( ufIndex % INTEGER_BITS) * 3 + propertyIndex;
-//		for (int i=0; i<30; i++) {
-//			int mask = 1 << i;
-//			System.out.println(Integer.toString(openFullArray[container] & mask, 2));
-//		}
+		int container = getIntContainerIndex(ufIndex);
+		int bitIndex = getIndexOfEltInContainer(ufIndex) + propertyIndex;
 		int mask = 1 << bitIndex;
-//		System.out.println(Integer.toString(mask, 2));
 		int masked_n = openFullArray[container] & mask;
 		return masked_n >> bitIndex == 1;
-	}
-
-	/**
-	 * Returns a boolean representing whether the given coordinate is connected
-	 * to the top of the grid.
-	 * 
-	 * @param i row number (1-indexed)
-	 * @param j col number (1-indexed)
-	 */
-	public boolean isFull(int i, int j) {
-		checkBounds(i, j);
-		int root = percolatesUf.find(getUFIndex(i, j));
-		return isBitOpenAt(root, IS_CONNECTED_TO_TOP_INDEX);
-	}
-
-	public boolean percolates() {
-		return percolates;
 	}
 
 	public static void main(String[] args) {
