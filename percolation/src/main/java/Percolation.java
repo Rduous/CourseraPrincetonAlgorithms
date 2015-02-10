@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 /**
  * Code implementing programming assignment #1 for Princeton Coursera
  * Algorithms course. (c) Abby B Bullock 2015
@@ -5,41 +7,41 @@
  */
 public class Percolation {
 
-	private static final int INTEGER_BITS = Integer.BYTES * 8 - 1;
+	private static final int IS_OPEN_INDEX = 0;
+	private static final int IS_CONNECTED_TO_TOP_INDEX = 1;
+	private static final int IS_CONNECTED_TO_BOTTOM_INDEX = 2;
 
-	/*
-	 * Array of ints used (via bitwise operators) to track open/closed status of cells
-	 */
-	private int[] isOpenBits;
+	private static final int IS_OPEN = 1;
+	private static final int IS_CONNECTED_TO_TOP = 2;
+	private static final int IS_CONNECTED_TO_BOTTOM = 4;
+	
+	private static final int PERCOLATES_MASK = 5;
+	
+	private final int[] openFullArray;
+	
+	private boolean percolates = false;
 
 	/*
 	 * Convenient values
 	 */
-	private final int topIndex;
-	private final int bottomIndex;
 	private final int n;
+	private final int totalNumElts;
 
 	/*
 	 * Union-find impl to track whether overall system percolates
 	 */
 	private final WeightedQuickUnionUF percolatesUf;
-	/*
-	 * Union-find impl to track whether any given cell should be "full"
-	 */
-	private final WeightedQuickUnionUF isFullUf;
+	
 
 	public Percolation(int N) {
 		if (N <= 0) {
 			throw new IllegalArgumentException("N must be greather than 0");
 		}
 		this.n = N;
-		int totalNumElts = n * n + 2;
-		isOpenBits = new int[(totalNumElts - 2) / INTEGER_BITS  + 2];
-		topIndex = totalNumElts - 2;
-		bottomIndex = totalNumElts - 1;
+		totalNumElts = n * n ;
+		openFullArray = new int[totalNumElts];
 
 		percolatesUf = new WeightedQuickUnionUF(totalNumElts);
-		isFullUf = new WeightedQuickUnionUF(totalNumElts);
 	}
 
 	/**
@@ -51,41 +53,45 @@ public class Percolation {
 		checkBounds(i, j);
 		
 		int ufIndex = getUFIndex(i, j);
-		openBitAt(isOpenBits, ufIndex);
-		// connect top and bottom elts, if appropriate
-		if (i == 1) { // is top row
-			percolatesUf.union(ufIndex, topIndex);
-			isFullUf.union(ufIndex, topIndex);
+		
+		// connect top and bottom elts, if appropriate, and track their statuses
+		int[] roots = new int[4];
+		Arrays.fill(roots, -1);
+		int[][] neighbors = new int[][] {{i-1,j},{i+1,j},{i,j-1},{i,j+1}};
+		
+		for (int k = 0; k < neighbors.length; k++) {
+			int[] coord = neighbors[k];
+			int row = coord[0];
+			int col = coord[1];int neighbor = getUFIndex(row, col);
+			if ( row > 0 && col > 0 && row <= n && col <= n && isBitOpenAt(neighbor, IS_OPEN_INDEX)) {
+				roots[k] = percolatesUf.find(neighbor);
+				percolatesUf.union(ufIndex, neighbor);
+			}
 		}
-		if (i == n) { // is bottom row
-			percolatesUf.union(ufIndex, bottomIndex);
+		int newRoot = percolatesUf.find(ufIndex);
+		for (int k = 0; k < neighbors.length; k++) {
+			int neighborRoot = roots[k];
+			if (neighborRoot != -1 ) {
+				openFullArray[newRoot] = openFullArray[newRoot] | openFullArray[roots[k]];
+			}
 		}
-
-		// check and connect neighbors
-		connectToNeighbor(ufIndex, i - 1, j);
-		connectToNeighbor(ufIndex, i + 1, j);
-		connectToNeighbor(ufIndex, i, j - 1);
-		connectToNeighbor(ufIndex, i, j + 1);
+		openFullArray[ufIndex] = openFullArray[ufIndex] | IS_OPEN;
+		if (i == 1) {
+			openFullArray[newRoot] = openFullArray[newRoot] | IS_CONNECTED_TO_TOP;
+		}
+		if (i == n) { 
+			openFullArray[newRoot] = openFullArray[newRoot] | IS_CONNECTED_TO_BOTTOM;
+		}
+		
+		percolates = percolates || (isBitOpenAt(newRoot, IS_CONNECTED_TO_TOP_INDEX) && isBitOpenAt(newRoot, IS_CONNECTED_TO_BOTTOM_INDEX));
 	}
 	
-	private void openBitAt(int[] bitTrackers, int ufIndex) {
-		int bitContainer = ufIndex / INTEGER_BITS;
-		int bitNumber = ufIndex % INTEGER_BITS;
-		isOpenBits[bitContainer] = isOpenBits[bitContainer] | (int) Math.pow(2, bitNumber);
-				
-	}
-
-	private void connectToNeighbor(int cellUfIndex, int neighborRow,
-			int neighborCol) {
-		try {
-			if (isOpen(neighborRow, neighborCol)) {
-				percolatesUf.union(getUFIndex(neighborRow, neighborCol), cellUfIndex);
-				isFullUf.union(getUFIndex(neighborRow, neighborCol), cellUfIndex);
-			}
-		} catch (IndexOutOfBoundsException e) {
-			// skip
-		}
-	}
+//	private void openBitAt(int[] bitTrackers, int ufIndex) {
+//		int bitContainer = ufIndex / INTEGER_BITS;
+//		int bitNumber = ufIndex % INTEGER_BITS;
+//		isOpenBits[bitContainer] = isOpenBits[bitContainer] | (int) Math.pow(2, bitNumber);
+//				
+//	}
 
 	/**
 	 * @param i row number (1-indexed)
@@ -94,17 +100,14 @@ public class Percolation {
 	 */
 	public boolean isOpen(int i, int j) {
 		checkBounds(i, j);
-		return isOpen(getUFIndex(i, j));
+//		int root = percolatesUf.find(getUFIndex(i, j));
+		return isBitOpenAt(getUFIndex(i, j), IS_OPEN_INDEX);
 	}
 	
-	private boolean isOpen(int ufIndex) {
-		int bitContainer = ufIndex / 31;
-		int bitNumber = ufIndex % 31;
-		int mask = 1 << bitNumber;
-		int masked_n = isOpenBits[bitContainer] & mask;
-		int thebit = masked_n >> bitNumber;
-				
-		return thebit == 1;
+	private boolean isBitOpenAt(int ufIndex, int bitIndex) {
+		int mask = 1 << bitIndex;
+		int masked_n = openFullArray[ufIndex] & mask;
+		return masked_n >> bitIndex == 1;
 	}
 
 	/**
@@ -116,11 +119,12 @@ public class Percolation {
 	 */
 	public boolean isFull(int i, int j) {
 		checkBounds(i, j);
-		return isOpen(i, j) && isFullUf.connected(getUFIndex(i, j), topIndex);
+		int root = percolatesUf.find(getUFIndex(i, j));
+		return isBitOpenAt(root, IS_CONNECTED_TO_TOP_INDEX);
 	}
 
 	public boolean percolates() {
-		return percolatesUf.connected(topIndex, bottomIndex);
+		return percolates;
 	}
 
 	public static void main(String[] args) {
