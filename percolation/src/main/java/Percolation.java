@@ -6,15 +6,16 @@ import java.util.Arrays;
  *
  */
 public class Percolation {
+	
+	private static final int INTEGER_BITS = 10;
 
 	private static final int IS_OPEN_INDEX = 0;
 	private static final int IS_CONNECTED_TO_TOP_INDEX = 1;
+	private static final int IS_CONNECTED_TO_BOTTOM_INDEX = 2;
 
 	private static final int IS_OPEN = 1;
 	private static final int IS_CONNECTED_TO_TOP = 2;
 	private static final int IS_CONNECTED_TO_BOTTOM = 4;
-	
-	private static final int PERCOLATES_MASK = 6;
 	
 	private boolean percolates = false;
 
@@ -31,9 +32,9 @@ public class Percolation {
 	
 	/*
 	 * An array of ints used w/bitmasks to track:
-	 * byte 0: open/closed status
-	 * byte 1: connected-to-top status
-	 * byte 2: connected-to-bottom status
+	 * byte 3n:     open/closed status
+	 * byte 3n + 1: connected-to-top status
+	 * byte 3n + 2: connected-to-bottom status
 	 */
 	private final int[] openFullArray;
 	
@@ -44,7 +45,7 @@ public class Percolation {
 		}
 		this.n = N;
 		totalNumElts = n * n ;
-		openFullArray = new int[totalNumElts];
+		openFullArray = new int[(totalNumElts) / INTEGER_BITS  + 1];
 
 		percolatesUf = new WeightedQuickUnionUF(totalNumElts);
 	}
@@ -71,18 +72,53 @@ public class Percolation {
 		for (int k = 0; k < roots.length; k++) {
 			int neighborRoot = roots[k];
 			if (neighborRoot != -1 ) {
-				openFullArray[newRoot] = openFullArray[newRoot] | openFullArray[roots[k]];
+				unionIntoRoot(newRoot, roots[k]);
+//				openFullArray[newRoot] = openFullArray[newRoot] | openFullArray[roots[k]];
 			}
 		}
-		openFullArray[ufIndex] = openFullArray[ufIndex] | IS_OPEN;
+		applyMask(ufIndex, IS_OPEN);
+//		openFullArray[ufIndex] = openFullArray[ufIndex] | IS_OPEN;
 		if (i == 1) {
-			openFullArray[newRoot] = openFullArray[newRoot] | IS_CONNECTED_TO_TOP;
+			applyMask(newRoot, IS_CONNECTED_TO_TOP);
+//			openFullArray[newRoot] = openFullArray[newRoot] | IS_CONNECTED_TO_TOP;
 		}
 		if (i == n) { 
-			openFullArray[newRoot] = openFullArray[newRoot] | IS_CONNECTED_TO_BOTTOM;
+			applyMask(newRoot, IS_CONNECTED_TO_BOTTOM);
+//			openFullArray[newRoot] = openFullArray[newRoot] | IS_CONNECTED_TO_BOTTOM;
 		}
+//		printStatus();
+		percolates = percolates || (isBitOpenAt(newRoot, IS_CONNECTED_TO_TOP_INDEX) && isBitOpenAt(newRoot, IS_CONNECTED_TO_BOTTOM_INDEX));
+	}
+
+	private void printStatus() {
+		for(int bits : openFullArray) {
+			System.out.print(Integer.toString(bits, 2) + " ");
+		}
+		System.out.print("\n");
+	}
+	
+	private void unionIntoRoot(int rootIndex, int otherIndex) {
+		int container1 = rootIndex / INTEGER_BITS;
+		int container2 = otherIndex / INTEGER_BITS;
 		
-		percolates = percolates || (openFullArray[newRoot] & PERCOLATES_MASK) == PERCOLATES_MASK;
+		int bitNum1 = (rootIndex % INTEGER_BITS) * 3;
+		int bitNum2 = (otherIndex % INTEGER_BITS) * 3;
+		
+		int mask = 7 << bitNum2;
+		int masked_n = openFullArray[container2] & mask;
+		int value = masked_n >> bitNum2;
+//		System.out.println("Other mask: " + Integer.toString(mask,2));
+//		System.out.println("Masked value: " + Integer.toString(masked_n,2));
+//		System.out.println("Target mask: " + Integer.toString((value << bitNum1), 2));
+//		System.out.println("Value after union: " + Integer.toString(openFullArray[container1] | (value << bitNum1), 2));
+		openFullArray[container1] = openFullArray[container1] | ( value << bitNum1);
+	}
+	
+	private void applyMask(int ufIndex, int mask) {
+		int container = ufIndex / INTEGER_BITS;
+		int bitNum = (ufIndex % INTEGER_BITS) * 3;
+		int shiftedMask = mask << bitNum;
+		openFullArray[container] = openFullArray[container] | shiftedMask;
 	}
 
 	/**
@@ -115,9 +151,17 @@ public class Percolation {
 		return isBitOpenAt(getUFIndex(i, j), IS_OPEN_INDEX);
 	}
 	
-	private boolean isBitOpenAt(int ufIndex, int bitIndex) {
+	private boolean isBitOpenAt(int ufIndex, int propertyIndex) {
+		int container = ufIndex / INTEGER_BITS;
+//		System.out.println(Integer.toString(openFullArray[container],2));
+		int bitIndex = ( ufIndex % INTEGER_BITS) * 3 + propertyIndex;
+//		for (int i=0; i<30; i++) {
+//			int mask = 1 << i;
+//			System.out.println(Integer.toString(openFullArray[container] & mask, 2));
+//		}
 		int mask = 1 << bitIndex;
-		int masked_n = openFullArray[ufIndex] & mask;
+//		System.out.println(Integer.toString(mask, 2));
+		int masked_n = openFullArray[container] & mask;
 		return masked_n >> bitIndex == 1;
 	}
 
