@@ -5,10 +5,12 @@
  */
 public class Percolation {
 
+	private static final int INTEGER_BITS = Integer.BYTES * 8 - 1;
+
 	/*
-	 * Grid to track open/close status of cells
+	 * Array of ints used (via bitwise operators) to track open/closed status of cells
 	 */
-	private final boolean[] isOpenArray;
+	private int[] isOpenBits;
 
 	/*
 	 * Convenient values
@@ -32,7 +34,7 @@ public class Percolation {
 		}
 		this.n = N;
 		int totalNumElts = n * n + 2;
-		isOpenArray = new boolean[totalNumElts - 2];
+		isOpenBits = new int[(totalNumElts - 2) / INTEGER_BITS  + 2];
 		topIndex = totalNumElts - 2;
 		bottomIndex = totalNumElts - 1;
 
@@ -49,8 +51,7 @@ public class Percolation {
 		checkBounds(i, j);
 		
 		int ufIndex = getUFIndex(i, j);
-		isOpenArray[ufIndex] = true;
-
+		openBitAt(isOpenBits, ufIndex);
 		// connect top and bottom elts, if appropriate
 		if (i == 1) { // is top row
 			percolatesUf.union(ufIndex, topIndex);
@@ -65,6 +66,13 @@ public class Percolation {
 		connectToNeighbor(ufIndex, i + 1, j);
 		connectToNeighbor(ufIndex, i, j - 1);
 		connectToNeighbor(ufIndex, i, j + 1);
+	}
+	
+	private void openBitAt(int[] bitTrackers, int ufIndex) {
+		int bitContainer = ufIndex / INTEGER_BITS;
+		int bitNumber = ufIndex % INTEGER_BITS;
+		isOpenBits[bitContainer] = isOpenBits[bitContainer] | (int) Math.pow(2, bitNumber);
+				
 	}
 
 	private void connectToNeighbor(int cellUfIndex, int neighborRow,
@@ -89,8 +97,14 @@ public class Percolation {
 		return isOpen(getUFIndex(i, j));
 	}
 	
-	private boolean isOpen(int ufId) {
-		return isOpenArray[ufId];
+	private boolean isOpen(int ufIndex) {
+		int bitContainer = ufIndex / 31;
+		int bitNumber = ufIndex % 31;
+		int mask = 1 << bitNumber;
+		int masked_n = isOpenBits[bitContainer] & mask;
+		int thebit = masked_n >> bitNumber;
+				
+		return thebit == 1;
 	}
 
 	/**
