@@ -11,13 +11,10 @@ public class Percolation {
 	private static final int NUMBER_OF_PROPERTIES_TRACKED = 3;
 	private static final int ELTS_IN_SINGLE_INT = INTEGER_BITS / NUMBER_OF_PROPERTIES_TRACKED;
 
-	private static final int IS_OPEN_INDEX = 0;
-	private static final int IS_CONNECTED_TO_TOP_INDEX = 1;
-	private static final int IS_CONNECTED_TO_BOTTOM_INDEX = 2;
-
 	private static final int IS_OPEN = 1;
 	private static final int IS_CONNECTED_TO_TOP = 2;
 	private static final int IS_CONNECTED_TO_BOTTOM = 4;
+	private static final int PERCOLATES = 6;
 	private static final int ALL_TRUE = 7;
 	
 	private boolean percolates = false;
@@ -75,18 +72,17 @@ public class Percolation {
 		for (int k = 0; k < roots.length; k++) {
 			int neighborRoot = roots[k];
 			if (neighborRoot != -1 ) {
-				unionIntoRoot(newRoot, roots[k]);
+				unionOtherIntoRoot(newRoot, roots[k]);
 			}
 		}
-		applyMask(ufIndex, IS_OPEN);
+		union(ufIndex, IS_OPEN);
 		if (i == 1) {
-			applyMask(newRoot, IS_CONNECTED_TO_TOP);
+			union(newRoot, IS_CONNECTED_TO_TOP);
 		}
 		if (i == n) { 
-			applyMask(newRoot, IS_CONNECTED_TO_BOTTOM);
+			union(newRoot, IS_CONNECTED_TO_BOTTOM);
 		}
-		percolates = percolates || (isBitOpenAt(newRoot, IS_CONNECTED_TO_TOP_INDEX) && 
-				isBitOpenAt(newRoot, IS_CONNECTED_TO_BOTTOM_INDEX));
+		percolates = percolates || intersect(newRoot, PERCOLATES);
 	}
 
 	/**
@@ -96,7 +92,7 @@ public class Percolation {
 	 */
 	public boolean isOpen(int i, int j) {
 		checkBounds(i, j);
-		return isBitOpenAt(getUFIndex(i, j), IS_OPEN_INDEX);
+		return intersect(getUFIndex(i, j), IS_OPEN);
 	}
 
 	/**
@@ -109,7 +105,7 @@ public class Percolation {
 	public boolean isFull(int i, int j) {
 		checkBounds(i, j);
 		int root = percolatesUf.find(getUFIndex(i, j));
-		return isBitOpenAt(root, IS_CONNECTED_TO_TOP_INDEX);
+		return intersect(root, IS_CONNECTED_TO_TOP);
 	}
 
 	public boolean percolates() {
@@ -124,24 +120,27 @@ public class Percolation {
 		return ( ufIndex % ELTS_IN_SINGLE_INT ) * NUMBER_OF_PROPERTIES_TRACKED; 
 	}
 	
-	private void unionIntoRoot(int rootIndex, int otherIndex) {
-		int container1 = getIntContainerIndex(rootIndex);
-		int container2 = getIntContainerIndex(otherIndex);
-		
-		int bitNum1 = getIndexOfEltInContainer(rootIndex);
-		int bitNum2 = getIndexOfEltInContainer(otherIndex);
-		
-		int mask = ALL_TRUE << bitNum2;
-		int masked_n = openFullArray[container2] & mask;
-		int value = masked_n >> bitNum2;
-		openFullArray[container1] = openFullArray[container1] | ( value << bitNum1);
+	private void unionOtherIntoRoot(int rootIndex, int otherIndex) {
+		int container = getIntContainerIndex(otherIndex);
+		int bitNum = getIndexOfEltInContainer(otherIndex);
+		int masked_n = openFullArray[container] & (ALL_TRUE << bitNum);
+		int rootMask = masked_n >> bitNum;
+		union(rootIndex, rootMask);
 	}
 	
-	private void applyMask(int ufIndex, int mask) {
+	private void union(int ufIndex, int mask) {
 		int container = getIntContainerIndex(ufIndex);
 		int bitNum = getIndexOfEltInContainer(ufIndex);
 		int shiftedMask = mask << bitNum;
 		openFullArray[container] = openFullArray[container] | shiftedMask;
+	}
+	
+	private boolean intersect(int ufIndex, int mask) {
+		int container = getIntContainerIndex(ufIndex);
+		int bitIndex = getIndexOfEltInContainer(ufIndex) ;
+		int shifted_mask = mask << bitIndex;
+		int masked = openFullArray[container] & shifted_mask;
+		return masked >> bitIndex == mask;
 	}
 
 	/**
@@ -156,19 +155,11 @@ public class Percolation {
 	private void unionWithNeighborIfOpen(int elt, int[] roots, int k, int neighborRow,
 			int neighborCol) {
 		int neighbor = getUFIndex(neighborRow, neighborCol);
-		if ( neighborRow > 0 && neighborCol > 0 && neighborRow <= n && neighborCol <= n && isBitOpenAt(neighbor, IS_OPEN_INDEX)) {
+		if ( neighborRow > 0 && neighborCol > 0 && neighborRow <= n && neighborCol <= n && intersect(neighbor, IS_OPEN)) {
 			int root = percolatesUf.find(neighbor);
 			roots[k] = root;
 			percolatesUf.union(elt, root);
 		}
-	}
-	
-	private boolean isBitOpenAt(int ufIndex, int propertyIndex) {
-		int container = getIntContainerIndex(ufIndex);
-		int bitIndex = getIndexOfEltInContainer(ufIndex) + propertyIndex;
-		int mask = 1 << bitIndex;
-		int masked_n = openFullArray[container] & mask;
-		return masked_n >> bitIndex == 1;
 	}
 
 	public static void main(String[] args) {
