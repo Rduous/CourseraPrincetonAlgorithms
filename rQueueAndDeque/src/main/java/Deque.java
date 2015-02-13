@@ -1,13 +1,13 @@
 
 
-import java.rmi.activation.UnknownObjectException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class Deque<Item> implements Iterable<Item> {
 	
-	Node firstNode = null;
-	Node lastNode = null;
+	private Node firstNode = null;
+	private Node lastNode = null;
+	private int size = 0;
 
 	public void addFirst(Item item) {
 		if (item == null) {
@@ -21,6 +21,7 @@ public class Deque<Item> implements Iterable<Item> {
 			firstNode.prev = node;
 		}
 		firstNode = node;
+		size++;
 	}
 
 	public void addLast(Item item) {
@@ -35,6 +36,7 @@ public class Deque<Item> implements Iterable<Item> {
 			lastNode.next = node;
 		}
 		lastNode = node;
+		size++;
 	}
 
 	public Item removeLast() {
@@ -48,6 +50,7 @@ public class Deque<Item> implements Iterable<Item> {
 		} else {
 			lastNode.next = null;
 		}
+		size--;
 		return oldLast.item;
 	}
 
@@ -60,16 +63,21 @@ public class Deque<Item> implements Iterable<Item> {
 		if (firstNode != null) {
 			firstNode.prev = null;
 		}
+		size--;
 		return oldFirst.item;
 	}
 
 	public boolean isEmpty() {
-		return firstNode == null;
+		return size == 0;
 	}
 	
 	public Iterator<Item> iterator() {
 		// TODO Auto-generated method stub
 		return new DequeIterator();
+	}
+
+	public int size() {
+		return size;
 	}
 	
 	private class Node {

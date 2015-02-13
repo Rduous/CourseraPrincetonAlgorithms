@@ -1,14 +1,13 @@
 
 
-import java.rmi.activation.UnknownObjectException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class RandomizedQueue<Item> implements Iterable<Item> {
 	
-	static final int INITIAL_CAPACITY = 10;
-	static final double RESIZE_DOWN_RATIO = 0.25;
+	protected static final int INITIAL_CAPACITY = 10;
+	protected static final double RESIZE_DOWN_RATIO = 0.25;
 	
 	private Item[] items = (Item[]) new Object[INITIAL_CAPACITY];
 	private int pointer = 0;
@@ -72,21 +71,21 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 		return new RQIter();
 	}
 
-	boolean needToResize() {
+	protected boolean needToResize() {
 		return  pointer == items.length; 
 	}
 	
-	boolean needToCompress() {
+	protected boolean needToCompress() {
 		return items.length > INITIAL_CAPACITY && ((double) size) / items.length < RESIZE_DOWN_RATIO;
 	}
 
-	void resize() {
+	protected void resize() {
 		Item[] oldItems = items;
 		items = (Item[]) new Object[items.length * 2];
 		System.arraycopy(oldItems, 0, items, 0, oldItems.length);
 	}
 	
-	void compress() {
+	protected void compress() {
 		Item[] newItems = (Item[]) new Object[items.length / 2];
 		int copied = 0;
 		for (int i = 0; copied < size && i < pointer; i++) {

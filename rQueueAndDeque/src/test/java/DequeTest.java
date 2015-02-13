@@ -250,5 +250,28 @@ public class DequeTest {
 		assertEquals(secondString, deque.removeFirst());
 		assertEquals(thirdString, deque.removeFirst());
 	}
+	
+	@Test
+	public void testSizeIsZeroWhenEmpty() {
+		assertEquals(0, deque.size());
+	}
+	
+	@Test
+	public void testSizeGrowsWithAddMethods() {
+		deque.addFirst(firstString);
+		assertEquals(1, deque.size());
+		deque.addLast(secondString);
+		assertEquals(2, deque.size());
+	}
+	
+	@Test
+	public void testSizeShrinksWithRemoveMethods() {
+		deque.addFirst(firstString);
+		deque.addLast(secondString);
+		deque.removeLast();
+		assertEquals(1, deque.size());
+		deque.removeFirst();
+		assertEquals(0, deque.size());
+	}
 
 }
