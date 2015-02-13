@@ -62,6 +62,8 @@ public class Deque<Item> implements Iterable<Item> {
 		firstNode = oldFirst.next;
 		if (firstNode != null) {
 			firstNode.prev = null;
+		} else {
+			lastNode = null;
 		}
 		size--;
 		return oldFirst.item;
