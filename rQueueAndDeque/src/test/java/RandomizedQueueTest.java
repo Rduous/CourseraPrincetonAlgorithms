@@ -3,7 +3,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
@@ -120,7 +120,7 @@ public class RandomizedQueueTest {
         for (int i = 0; i < toAdd; i++) {
             queue.enqueue(Integer.toString(i));
         }
-        verify(queue).resize();
+        verify(queue).resize(anyInt());
     }
 
     @Test
@@ -135,8 +135,8 @@ public class RandomizedQueueTest {
             queue.dequeue();
         }
 
-        verify(queue).resize();
-        verify(queue).compress();
+        verify(queue).resize(RandomizedQueue.INITIAL_CAPACITY * 2);
+        verify(queue).resize(RandomizedQueue.INITIAL_CAPACITY);
     }
 
     @Test
@@ -151,8 +151,8 @@ public class RandomizedQueueTest {
             queue.dequeue();
         }
 
-        verify(queue).resize();
-        verify(queue, never()).compress();
+        verify(queue).resize(RandomizedQueue.INITIAL_CAPACITY*2);
+        verify(queue, never()).resize(RandomizedQueue.INITIAL_CAPACITY);
     }
 
     @Test(expected = NoSuchElementException.class)

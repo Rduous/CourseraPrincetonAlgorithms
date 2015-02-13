@@ -10,18 +10,17 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 
     private Item[] items = (Item[]) new Object[INITIAL_CAPACITY];
     private int pointer = 0;
-    private int size = 0;
 
     public RandomizedQueue() {
 
     }
 
     public boolean isEmpty() {
-        return size == 0;
+        return pointer == 0;
     }
 
     public int size() {
-        return size;
+        return pointer;
     }
 
     public void enqueue(Item item) {
@@ -29,10 +28,9 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
             throw new NullPointerException();
         }
         if (needToResize()) {
-            resize();
+            resize(items.length * 2);
         }
         items[pointer++] = item;
-        size++;
     }
 
     public Item dequeue() {
@@ -40,29 +38,22 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
             throw new NoSuchElementException();
         }
 
-        int toReturn = getRandomItemPointer();
+        int toReturn = StdRandom.uniform(pointer);
         Item item = items[toReturn];
-        items[toReturn] = null;
-        size--;
+        pointer--;
+        items[toReturn] = items[pointer];
+        items[pointer] = null;
         if (needToCompress()) {
-            compress();
+            resize(items.length / 2);
         }
         return item;
-    }
-
-    private int getRandomItemPointer() {
-        int toReturn;
-        do {
-            toReturn = StdRandom.uniform(pointer);
-        } while (items[toReturn] == null);
-        return toReturn;
     }
 
     public Item sample() {
         if (isEmpty()) {
             throw new NoSuchElementException();
         }
-        return items[getRandomItemPointer()];
+        return items[StdRandom.uniform(pointer)];
     }
 
     public Iterator<Item> iterator() {
@@ -75,27 +66,14 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 
     protected boolean needToCompress() {
         return items.length > INITIAL_CAPACITY
-                && ((double) size) / items.length < RESIZE_DOWN_RATIO;
+                && ((double) pointer) / items.length < RESIZE_DOWN_RATIO;
     }
 
-    protected void resize() {
+    protected void resize(int newSize) {
         Item[] oldItems = items;
-        items = (Item[]) new Object[items.length * 2];
-        System.arraycopy(oldItems, 0, items, 0, oldItems.length);
+        items = (Item[]) new Object[newSize];
+        System.arraycopy(oldItems, 0, items, 0, pointer);
     }
-
-    protected void compress() {
-        Item[] newItems = (Item[]) new Object[items.length / 2];
-        int copied = 0;
-        for (int i = 0; copied < size && i < pointer; i++) {
-            if (items[i] != null) {
-                newItems[copied++] = items[i];
-            }
-        }
-        items = newItems;
-        pointer = size + 1;
-    }
-
     private class RQIter implements Iterator<Item> {
 
         Item[] items;
@@ -106,7 +84,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
             items = Arrays.copyOf(RandomizedQueue.this.items,
                     RandomizedQueue.this.pointer);
             StdRandom.shuffle(items);
-            size = RandomizedQueue.this.size;
+            size = RandomizedQueue.this.pointer;
         }
 
         public boolean hasNext() {
