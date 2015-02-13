@@ -2,20 +2,10 @@ import java.util.Arrays;
 
 /**
  * Code implementing programming assignment #1 for Princeton Coursera
- * Algorithms course. (c) Abby B Bullock 2015
+ * Algorithms course.
  *
  */
 public class Percolation {
-	
-	private static final int INTEGER_BITS = 31;
-	private static final int NUMBER_OF_PROPERTIES_TRACKED = 3;
-	private static final int ELTS_IN_SINGLE_INT = INTEGER_BITS / NUMBER_OF_PROPERTIES_TRACKED;
-
-	private static final int IS_OPEN = 1;
-	private static final int IS_CONNECTED_TO_TOP = 2;
-	private static final int IS_CONNECTED_TO_BOTTOM = 4;
-	private static final int PERCOLATES = 6;
-	private static final int ALL_TRUE = 7;
 	
 	private boolean percolates = false;
 
@@ -30,13 +20,9 @@ public class Percolation {
 	 */
 	private final WeightedQuickUnionUF percolatesUf;
 	
-	/*
-	 * An array of ints used w/bitmasks to track:
-	 * byte 3n:     open/closed status
-	 * byte 3n + 1: connected-to-top status
-	 * byte 3n + 2: connected-to-bottom status
-	 */
-	private final int[] openFullArray;
+	private final boolean[] isOpenArray;
+	private final boolean[] isConnectedToTopArray;
+	private final boolean[] isConnectedToBottomArray;
 	
 
 	public Percolation(int N) {
@@ -45,7 +31,9 @@ public class Percolation {
 		}
 		this.n = N;
 		totalNumElts = n * n ;
-		openFullArray = new int[(totalNumElts) / ELTS_IN_SINGLE_INT  + 1];
+		isOpenArray = new boolean[totalNumElts];
+		isConnectedToTopArray = new boolean[totalNumElts];
+		isConnectedToBottomArray = new boolean[totalNumElts];
 
 		percolatesUf = new WeightedQuickUnionUF(totalNumElts);
 	}
@@ -69,20 +57,20 @@ public class Percolation {
 		unionWithNeighborIfOpen(ufIndex, roots, 3, i, j+1);
 
 		int newRoot = percolatesUf.find(ufIndex);
+		boolean isConnectedToTop = false;
+		boolean isConnectedToBottom = false;
 		for (int k = 0; k < roots.length; k++) {
 			int neighborRoot = roots[k];
 			if (neighborRoot != -1 ) {
-				unionOtherIntoRoot(newRoot, roots[k]);
+				isConnectedToTop = isConnectedToTop || isConnectedToTopArray[neighborRoot];
+				isConnectedToBottom = isConnectedToBottom || isConnectedToBottomArray[neighborRoot];
 			}
 		}
-		union(ufIndex, IS_OPEN);
-		if (i == 1) {
-			union(newRoot, IS_CONNECTED_TO_TOP);
-		}
-		if (i == n) { 
-			union(newRoot, IS_CONNECTED_TO_BOTTOM);
-		}
-		percolates = percolates || intersect(newRoot, PERCOLATES);
+		isOpenArray[ufIndex] = true;
+		isConnectedToTopArray[newRoot] = isConnectedToTop || i == 1;
+		isConnectedToBottomArray[newRoot] = isConnectedToBottom || i == n;
+		
+		percolates = percolates || (isConnectedToBottomArray[newRoot] && isConnectedToTopArray[newRoot]);
 	}
 
 	/**
@@ -92,7 +80,7 @@ public class Percolation {
 	 */
 	public boolean isOpen(int i, int j) {
 		checkBounds(i, j);
-		return intersect(getUFIndex(i, j), IS_OPEN);
+		return isOpenArray[getUFIndex(i, j)];
 	}
 
 	/**
@@ -105,42 +93,11 @@ public class Percolation {
 	public boolean isFull(int i, int j) {
 		checkBounds(i, j);
 		int root = percolatesUf.find(getUFIndex(i, j));
-		return intersect(root, IS_CONNECTED_TO_TOP);
+		return isConnectedToTopArray[root];
 	}
 
 	public boolean percolates() {
 		return percolates;
-	}
-	
-	private int getIntContainerIndex(int ufIndex) {
-		return ufIndex / ELTS_IN_SINGLE_INT;
-	}
-	
-	private int getIndexOfEltInContainer(int ufIndex) {
-		return ( ufIndex % ELTS_IN_SINGLE_INT ) * NUMBER_OF_PROPERTIES_TRACKED; 
-	}
-	
-	private void unionOtherIntoRoot(int rootIndex, int otherIndex) {
-		int container = getIntContainerIndex(otherIndex);
-		int bitNum = getIndexOfEltInContainer(otherIndex);
-		int masked_n = openFullArray[container] & (ALL_TRUE << bitNum);
-		int rootMask = masked_n >> bitNum;
-		union(rootIndex, rootMask);
-	}
-	
-	private void union(int ufIndex, int mask) {
-		int container = getIntContainerIndex(ufIndex);
-		int bitNum = getIndexOfEltInContainer(ufIndex);
-		int shiftedMask = mask << bitNum;
-		openFullArray[container] = openFullArray[container] | shiftedMask;
-	}
-	
-	private boolean intersect(int ufIndex, int mask) {
-		int container = getIntContainerIndex(ufIndex);
-		int bitIndex = getIndexOfEltInContainer(ufIndex) ;
-		int shifted_mask = mask << bitIndex;
-		int masked = openFullArray[container] & shifted_mask;
-		return masked >> bitIndex == mask;
 	}
 
 	/**
@@ -155,7 +112,7 @@ public class Percolation {
 	private void unionWithNeighborIfOpen(int elt, int[] roots, int k, int neighborRow,
 			int neighborCol) {
 		int neighbor = getUFIndex(neighborRow, neighborCol);
-		if ( neighborRow > 0 && neighborCol > 0 && neighborRow <= n && neighborCol <= n && intersect(neighbor, IS_OPEN)) {
+		if ( neighborRow > 0 && neighborCol > 0 && neighborRow <= n && neighborCol <= n && isOpenArray[neighbor]) {
 			int root = percolatesUf.find(neighbor);
 			roots[k] = root;
 			percolatesUf.union(elt, root);
