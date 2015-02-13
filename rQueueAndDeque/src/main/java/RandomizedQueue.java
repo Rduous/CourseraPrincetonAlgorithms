@@ -1,37 +1,132 @@
 
 
+import java.rmi.activation.UnknownObjectException;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class RandomizedQueue<Item> implements Iterable<Item> {
+	
+	static final int INITIAL_CAPACITY = 10;
+	static final double RESIZE_DOWN_RATIO = 0.25;
+	
+	private Item[] items = (Item[]) new Object[INITIAL_CAPACITY];
+	private int pointer = 0;
+	private int size = 0;
+	
 	public RandomizedQueue() {
-		// construct an empty randomized queue
+		
 	}
 
 	public boolean isEmpty() {
-		// is the queue empty?
-		return false;
+		return size == 0;
 	}
 
 	public int size() {
-		// return the number of items on the queue
-		return 0;
+		return size;
 	}
 
 	public void enqueue(Item item) {
-		// add the item
+		if (item == null) {
+			throw new NullPointerException();
+		}
+		if (needToResize()) {
+			resize();
+		}
+		items[pointer++] = item;
+		size++;
 	}
 
 	public Item dequeue() {
-		// remove and return a random item
-		return null;
+		if (isEmpty()) {
+			throw new NoSuchElementException();
+		}
+		
+		int toReturn = getRandomItemPointer();
+		Item item = items[toReturn];
+		items[toReturn] = null;
+		size--;
+		if (needToCompress()) {
+			compress();
+		}
+		return item;
+	}
+
+	private int getRandomItemPointer() {
+		int toReturn;
+		do { 
+			toReturn = StdRandom.uniform(pointer);
+		}
+		while (items[toReturn] == null);
+		return toReturn;
 	}
 
 	public Item sample() {
-		// return (but do not remove) a random item
-		return null;
+		if (isEmpty()) {
+			throw new NoSuchElementException();
+		}
+		return items[getRandomItemPointer()];
 	}
 
 	public Iterator<Item> iterator() {
-		return null;
+		return new RQIter();
+	}
+
+	boolean needToResize() {
+		return  pointer == items.length; 
+	}
+	
+	boolean needToCompress() {
+		return items.length > INITIAL_CAPACITY && ((double) size) / items.length < RESIZE_DOWN_RATIO;
+	}
+
+	void resize() {
+		Item[] oldItems = items;
+		items = (Item[]) new Object[items.length * 2];
+		System.arraycopy(oldItems, 0, items, 0, oldItems.length);
+	}
+	
+	void compress() {
+		Item[] newItems = (Item[]) new Object[items.length / 2];
+		int copied = 0;
+		for (int i = 0; copied < size && i < pointer; i++) {
+			if (items[i] != null) {
+				newItems[copied++] = items[i];
+			}
+		}
+		items = newItems;
+		pointer = size + 1;
+	}
+	
+	private class RQIter implements Iterator<Item> {
+		
+		Item[] items;
+		int size;
+		int pointer = 0;
+		
+		public RQIter() {
+			items = Arrays.copyOf(RandomizedQueue.this.items, RandomizedQueue.this.pointer);
+			StdRandom.shuffle(items);
+			size = RandomizedQueue.this.size;
+		}
+
+		public boolean hasNext() {
+			return size != 0;
+		}
+
+		public Item next() {
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			}
+			while (items[pointer] == null) {
+				pointer++;
+			}
+			size--;
+			return items[pointer++];
+		}
+		
+		public void remove() throws UnsupportedOperationException {
+			throw new UnsupportedOperationException();
+		}
 	}
 }
