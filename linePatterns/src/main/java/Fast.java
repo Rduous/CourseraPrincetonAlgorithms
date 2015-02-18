@@ -21,7 +21,7 @@ public class Fast {
         findAndPrintLineSegments(points);
     }
 
-    private static void findAndPrintLineSegments(Point[] input) {
+    static void findAndPrintLineSegments(Point[] input) {
         Arrays.sort(input);
         int n = input.length;
         Point[] pointsSortedBySlope = Arrays.copyOf(input, n);
