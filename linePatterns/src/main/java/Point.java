@@ -38,6 +38,10 @@ public class Point implements Comparable<Point> {
     		}
     		return Double.POSITIVE_INFINITY;
     	}
+    	//avoid negative zero
+    	if (rise == -0) {
+    	    return 0;
+    	}
     	return rise / run; 
     }
 

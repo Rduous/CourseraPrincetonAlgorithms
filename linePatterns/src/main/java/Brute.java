@@ -24,12 +24,12 @@ public class Brute {
         int n = points.length;
         for (int i = 0; i < n-3; i++) {
             for (int j = i+1; j < n-2; j++) {
-                for (int k = 0; k < n-1; k++) {
+                for (int k = j + 1; k < n-1; k++) {
                     Point p1 = points[i];
                     Point p2 = points[j];
                     Point p3 = points[k];
                     if (colinear(p1, p2, p3)) {
-                        for (int m = 0; m < n; m++) {
+                        for (int m = k+1; m < n; m++) {
                             Point p4 = points[m];
                             if (colinear(p1, p2, p4)) {
                                 System.out.println(p1 + " -> " + p2 + " -> " + p3 + " -> " + p4);

@@ -53,6 +53,12 @@ public class PointTest {
     //
     // slopeTo tests
     //
+    @Test (expected = NullPointerException.class)
+    public void testSlopeToThrowsNPE() {
+        Point p = new Point(0, 0);
+        p.slopeTo(null);
+    }
+    
     @Test
     public void testSlopeToIteselfReturnsNegativeInfinity() {
         Point p = new Point(0, 0);
@@ -85,10 +91,27 @@ public class PointTest {
         assertEquals(-1., p1.slopeTo(p3), 0.);
         assertEquals(-1, p3.slopeTo(p1), 0.);
     }
+    
+    @Test
+    public void testCasesFromAssignmentEvaluationScript() {
+        
+    }
 
     //
     // slope order compartor tests
     //
+    @Test (expected = NullPointerException.class)
+    public void testComparatorThrowsNPE() {
+        Point p = new Point(0, 0);
+        p.SLOPE_ORDER.compare(null, p);
+    }
+    
+    @Test (expected = NullPointerException.class)
+    public void testComparatorThrowsNPE2() {
+        Point p = new Point(0, 0);
+        p.SLOPE_ORDER.compare(p, null);
+    }
+    
     @Test
     public void testDoesNotReorderAlreadyOrderedPoints() {
         Point origin = new Point(0, 0);
@@ -107,19 +130,28 @@ public class PointTest {
         Arrays.sort(sorted, origin.SLOPE_ORDER);
         assertArrayEquals(pointsInOrder, sorted);        
     }
+    
+    @Test
+    public void testCaseForNegativeZeroSlope() {
+        Point p = new Point(3,9);
+        Point q = new Point(2,9);
+        Point r = new Point(7,9);
+        
+        assertEquals(0, p.SLOPE_ORDER.compare(q, r));
+    }
 
     /*
-     * 100  10 9    8      7
-     *      |             
-     * 50   |              6
-     *      |             
-     * 0    0--------------5
-     *      |             
-     * 50   |              4
-     *      |             
-     * -100 |  1    2      3
+     * 100  [10] [9]    [8]      [7]
+     * ...  |             
+     * 50   |                    [6]
+     * ...  |             
+     * 0    [0]------------------[5]
+     * ...  |             
+     * 50   |                    [4]
+     * ...  |             
+     * -100 |    [1]    [2]      [3]
      * 
-     *      0  1    50     100
+     *      0    1  ... 50  ...  100
      */
     private Point[] getPointsInOrderOfSlopeToOrigin(Point origin) {
         Point[] pointsInOrder = { origin, new Point(1, -100),
