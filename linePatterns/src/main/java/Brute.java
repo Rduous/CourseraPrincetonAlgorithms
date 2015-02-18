@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 
 public class Brute {
     public static void main(String[] args) {
@@ -17,6 +19,7 @@ public class Brute {
             point.draw();
         }
         
+        Arrays.sort(points);
         findAndDrawLineSegments(points);
     }
 
@@ -46,7 +49,7 @@ public class Brute {
     private static boolean colinear(Point... points) {
         double slope = points[0].slopeTo(points[1]);
         for (int i = 1; i < points.length-1; i++) {
-            if ( Math.abs(points[i].slopeTo(points[i+1] ) - slope) > 0.00001) {
+            if ( points[i].slopeTo(points[i+1]) != slope) {
                 return false;
             }
         }
