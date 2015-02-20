@@ -1,6 +1,8 @@
 import java.util.Arrays;
 
 public class Fast {
+    
+    private static final String SEP = " -> ";
 
     public static void main(String[] args) {
         String fileName = args[0];
@@ -57,14 +59,17 @@ public class Fast {
             }
             
             if (firstEncounter) {
+                StringBuilder b = new StringBuilder();
                 Arrays.sort(toPrint);
-                System.out.print(point + " -> ");
+                b.append(point);
+                b.append(SEP);
                 for (int i = 0; i < numPoints-1; i++) {
-                    
-                    System.out.print(toPrint[i] + " -> ");
+                    b.append(toPrint[i]);
+                    b.append(SEP);
                 }
                 Point endPoint = toPrint[numPoints-1];
-                System.out.println(endPoint);
+                b.append(endPoint);
+                System.out.println(b.toString());
                 point.drawTo(endPoint);
             }
         }
