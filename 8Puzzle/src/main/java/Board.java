@@ -18,13 +18,33 @@ public class Board {
     }
 
     public int hamming() {
-        // number of blocks out of place
-        return 0;
+        int result = 0;
+        for (int i = 0; i <= highestNum; i++) {
+            int row = i/n;
+            int col = i%n;
+            int expected = i+1;
+            int actual = blocks[row][col];
+            if (actual != expected && actual != 0) {
+                result++;
+            }
+        }
+        return result;
     }
 
     public int manhattan() {
-        // sum of Manhattan distances between blocks and goal
-        return 0;
+        int result = 0;
+        for (int i = 0; i <= highestNum; i++) {
+            int row = i/n;
+            int col = i%n;
+            int expected = i+1;
+            int actual = blocks[row][col];
+            if (actual != expected && actual != 0) {
+                int goalRow = (actual-1)/n;
+                int goalCol = (actual-1)%n;
+                result += Math.abs(goalRow - row) + Math.abs(goalCol - col);
+            }
+        }
+        return result;
     }
 
     public boolean isGoal() {
