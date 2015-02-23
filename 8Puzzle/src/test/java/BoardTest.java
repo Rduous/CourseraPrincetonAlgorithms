@@ -1,14 +1,20 @@
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import static org.junit.Assert.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
 
 public class BoardTest {
 
     private static final int[][] ALMOST_FINAL = new int[][] { { 1, 2, 3 },
             { 4, 5, 6 }, { 7, 0, 8 } };
-    private static final int[][] ZERO_AT_2_1 = new int[][] { { 1, 2, 3 },
+    private static final int[][] ZERO_ON_LEFT_EDGE = new int[][] { { 1, 2, 3 },
             { 0, 4, 5 }, { 7, 8, 6 } };
     private static final int[][] ZERO_IN_MIDDLE = new int[][] { { 1, 2, 3 },
             { 4, 0, 5 }, { 7, 8, 6 } };
@@ -20,7 +26,7 @@ public class BoardTest {
     private Board finalBoard;
     private Board almostFinalBoard;
     private Board zeroInMiddleBoard;
-    private Board zeroAtTwoOneBoard;
+    private Board zeroOnLeftEdge;
     private Board hammingManhattanExample;
 
     @Before
@@ -28,7 +34,7 @@ public class BoardTest {
         finalBoard = new Board(FINAL);
         almostFinalBoard = new Board(ALMOST_FINAL);
         zeroInMiddleBoard = new Board(ZERO_IN_MIDDLE);
-        zeroAtTwoOneBoard = new Board(ZERO_AT_2_1);
+        zeroOnLeftEdge = new Board(ZERO_ON_LEFT_EDGE);
         hammingManhattanExample = new Board(HAMMING_MANHATTAN_EXAMPLE);
     }
 
@@ -49,7 +55,7 @@ public class BoardTest {
 
     @Test
     public void testIsGoalFalseWhenNumbersNotInFinalState3() {
-        assertFalse(zeroAtTwoOneBoard.isGoal());
+        assertFalse(zeroOnLeftEdge.isGoal());
     }
 
     @Test
@@ -88,10 +94,10 @@ public class BoardTest {
     public void testTwinReturnsABoardThatIsCreatedWithOneMove() {
         Board twinOfFinal = finalBoard.twin();
         assertEquals(twinOfFinal, almostFinalBoard);
-        Board twin2 = zeroAtTwoOneBoard.twin();
+        Board twin2 = zeroOnLeftEdge.twin();
         assertEquals(zeroInMiddleBoard, twin2);
         Board twin3 = zeroInMiddleBoard.twin();
-        assertEquals(zeroAtTwoOneBoard, twin3);
+        assertEquals(zeroOnLeftEdge, twin3);
     }
 
     @Test
@@ -111,9 +117,9 @@ public class BoardTest {
 
     @Test
     public void testManhattanNumberOfZeroAtTwoOne() {
-        assertEquals(3, zeroAtTwoOneBoard.manhattan());
+        assertEquals(3, zeroOnLeftEdge.manhattan());
     }
-    
+
     @Test
     public void testManhattanOnExampleBoard() {
         assertEquals(10, hammingManhattanExample.manhattan());
@@ -136,12 +142,63 @@ public class BoardTest {
 
     @Test
     public void testHammingNumberOfZeroAtTwoOne() {
-        assertEquals(3, zeroAtTwoOneBoard.hamming());
+        assertEquals(3, zeroOnLeftEdge.hamming());
     }
-    
+
     @Test
     public void testHammingOnExampleBoard() {
         assertEquals(5, hammingManhattanExample.hamming());
+    }
+
+    @Test
+    public void testNeighborsNonNull() {
+        assertNotNull(finalBoard.neighbors());
+    }
+
+    @Test
+    public void testIteratorHasFourBoardsWhenZeroInTheMiddle() {
+        Iterable<Board> neighbors = zeroInMiddleBoard.neighbors();
+        int num = 0;
+        for (Board n : neighbors) {
+            num++;
+        }
+        assertEquals(4, num);
+    }
+
+    @Test
+    public void testIteratorHasTwoBoardsWhenZeroInTheCorner() {
+        Iterable<Board> neighbors = finalBoard.neighbors();
+        int num = 0;
+        for (Board n : neighbors) {
+            num++;
+        }
+        assertEquals(2, num);
+    }
+
+    @Test
+    public void testIteratorHasTwoBoardsWhenZeroOnAnEdge() {
+        Iterable<Board> neighbors = zeroOnLeftEdge.neighbors();
+        int num = 0;
+        for (Board n : neighbors) {
+            num++;
+        }
+        assertEquals(3, num);
+    }
+
+    /*
+     * Check that all the neighbors are unique
+     */
+    @Test
+    public void testNeighbors() {
+        List<Board> boards = new ArrayList<Board>();
+        Iterable<Board> neighbors = zeroInMiddleBoard.neighbors();
+        for (Board n : neighbors) {
+            assertNotEquals(zeroInMiddleBoard, n);
+            assertFalse(boards.contains(n));
+            boards.add(n);
+            assertTrue(boards.contains(n));
+        }
+        assertTrue(boards.contains(zeroOnLeftEdge));
     }
 
 }
