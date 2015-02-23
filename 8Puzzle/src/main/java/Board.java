@@ -1,8 +1,15 @@
+import java.util.Objects;
+
 public class Board {
+    
+    private final int highestNum;
+    private final int n;
+    private final int[][] blocks;
 
     public Board(int[][] blocks) {
-        // construct a board from an N-by-N array of blocks
-        // (where blocks[i][j] = block in row i, column j)
+        this.blocks = blocks;
+        n = blocks.length;
+        highestNum = (int) (Math.pow(n, 2) - 1); 
     }
 
     public int dimension() {
@@ -21,19 +28,49 @@ public class Board {
     }
 
     public boolean isGoal() {
-        // is this board the goal board?
-        return false;
+        boolean isGoal = true;
+        for (int i = 0; i < highestNum && isGoal; i++) {
+            isGoal &= blocks[i/n][i%n] == i + 1;
+        }
+        return isGoal;
     }
 
     public Board twin() {
-        // a boadr that is obtained by exchanging two adjacent blocks in the
-        // same row
-        return null;
+        int[][] blocks2 = new int[n][n];
+        for (int i = 0; i < highestNum + 1; i++) {
+            int row = i/n;
+            int col = i%n;
+            int val = blocks[row][col];
+            if (val == 0) {
+                if (col == 0) {
+                    //swap right
+                    blocks2[row][col+1] = 0;
+                    blocks2[row][col] = blocks[row][col+1];
+                    i++;
+                } else {
+                    //swap left
+                    blocks2[row][col] = blocks2[row][col-1];
+                    blocks2[row][col-1] = val;
+                }
+            } else {
+                blocks2[row][col] = val;
+            }
+        }
+        return new Board(blocks2);
     }
 
     public boolean equals(Object y) {
-        // does this board equal y?
-        return false;
+        if (this == y) {
+            return true;
+        }
+        if (y == null) {
+            return false;
+        }
+        if ( ! (y instanceof Board )) {
+            return false;
+        }
+        Board other = (Board) y;
+        return Objects.deepEquals(blocks, other.blocks);
     }
 
     public Iterable<Board> neighbors() {
