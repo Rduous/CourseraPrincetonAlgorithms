@@ -91,16 +91,6 @@ public class BoardTest {
     }
 
     @Test
-    public void testTwinReturnsABoardThatIsCreatedWithOneMove() {
-        Board twinOfFinal = finalBoard.twin();
-        assertEquals(twinOfFinal, almostFinalBoard);
-        Board twin2 = zeroOnLeftEdge.twin();
-        assertEquals(zeroInMiddleBoard, twin2);
-        Board twin3 = zeroInMiddleBoard.twin();
-        assertEquals(zeroOnLeftEdge, twin3);
-    }
-
-    @Test
     public void testManhattanNumberZeroOnFinalBoard() {
         assertEquals(0, finalBoard.manhattan());
     }
@@ -199,6 +189,15 @@ public class BoardTest {
             assertTrue(boards.contains(n));
         }
         assertTrue(boards.contains(zeroOnLeftEdge));
+    }
+
+    @Test
+    public void testTwinReturnsABoardThatIsNotANeighbor() {
+        Board twinOfFinal = finalBoard.twin();
+        Iterable<Board> neighborsOfFinal = finalBoard.neighbors();
+        for (Board board : neighborsOfFinal) {
+            assertNotEquals(twinOfFinal, board);
+        }
     }
 
 }

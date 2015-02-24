@@ -18,7 +18,7 @@ public class Board {
     }
 
     public int dimension() {
-        return 0;
+        return n;
         // board dimension N
     }
 
@@ -61,43 +61,19 @@ public class Board {
     }
 
     public Board twin() {
-        int[][] blocks2 = new int[n][n];
-        for (int i = 0; i < highestNum + 1; i++) {
-            int row = rowFor(i);
-            int col = colFor(i);
-            int val = blocks[row][col];
-            if (val == 0) {
-                if (col == 0) {
-                    swapEmptySpaceRight(blocks2, row, col);
-                    i++;
-                } else {
-                    swapEmptySpaceLeft(blocks2, row, col);
-                }
-            } else {
-                blocks2[row][col] = val;
+        Board twin = new Board(blocks);
+        for (int i = 0; i < n; i++) {
+            if (blocks[i][0] != 0 && blocks[i][1] != 0) {
+                twin.swap(i, 0, i, 1);
             }
         }
-        return new Board(blocks2);
+        return twin;
     }
 
-    private void swapEmptySpaceLeft(int[][] blocks2, int row, int col) {
-        blocks2[row][col] = blocks2[row][col - 1];
-        blocks2[row][col - 1] = 0;
-    }
-
-    private void swapEmptySpaceRight(int[][] blocks2, int row, int col) {
-        blocks2[row][col + 1] = 0;
-        blocks2[row][col] = blocks[row][col + 1];
-    }
-
-    private void swapEmptySpaceUp(int[][] blocks2, int row, int col) {
-        blocks2[row][col] = blocks2[row-1][col];
-        blocks2[row-1][col] = 0;
-    }
-
-    private void swapEmptySpaceDown(int[][] blocks2, int row, int col) {
-        blocks2[row+1][col] = 0;
-        blocks2[row][col] = blocks[row+1][col];
+    private void swap(int row1, int col1, int row2, int col2) {
+        int val = blocks[row1][col1];
+        blocks[row1][col1] = blocks[row2][col2];
+        blocks[row2][col2] = val;
     }
 
     public boolean equals(Object y) {
@@ -129,22 +105,22 @@ public class Board {
         }
         if (col > 0) {
             Board b = new Board(blocks);
-            swapEmptySpaceLeft(b.blocks, row, col);
+            b.swap(row, col, row, col - 1);
             neighbors.add(b);
         }
         if (col < n - 1) {
             Board b = new Board(blocks);
-            swapEmptySpaceRight(b.blocks, row, col);
+            b.swap(row, col, row, col + 1);
             neighbors.add(b);
         }
         if (row > 0) {
             Board b = new Board(blocks);
-            swapEmptySpaceUp(b.blocks, row, col);
+            b.swap(row, col, row - 1, col);
             neighbors.add(b);
         }
-        if (row < n -1) {
+        if (row < n - 1) {
             Board b = new Board(blocks);
-            swapEmptySpaceDown(b.blocks, row, col);
+            b.swap(row, col, row + 1, col);
             neighbors.add(b);
         }
         return neighbors;
@@ -157,8 +133,7 @@ public class Board {
             b.append("\n");
             for (int j = 0; j < n; j++) {
                 b.append(" ");
-                int val = blocks[i][j];
-                b.append(val == 0 ? " " : val);
+                b.append(String.format("%2d", blocks[i][j]));
             }
         }
         return b.toString();

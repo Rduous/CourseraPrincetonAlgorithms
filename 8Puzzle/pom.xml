@@ -8,9 +8,26 @@
 
     <dependencies>
         <dependency>
+            <groupId>edu.princeton</groupId>
+            <artifactId>stdlib</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>edu.princeton</groupId>
+            <artifactId>algs4</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.11</version>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>ThirdParty</id>
+            <url>file://${basedir}/../dependencies</url>
+        </repository>
+    </repositories>
 </project>
