@@ -201,10 +201,12 @@ public class BoardTest {
         }
     }
     
+    /*
+     * Rather complicated test to be sure some optimizations don't break these vals
+     */
     @Test
-    @Ignore
     public void testManhattanAndHammingOnSequenceOfMoves() {
-        int[] pathNeighborIndices = {0,0,1,1,2,2,0,1};
+        int[] pathNeighborIndices = {1,1,0,0,0,1,1,2};
         Board previous = finalBoard;
         Board path1 = new Board(new int[][] {{1, 2, 3}, {4, 5, 0}, {7, 8, 6}});
         Board path2 = new Board(new int[][] {{1, 2, 0}, {4, 5, 3}, {7, 8, 6}});
@@ -218,12 +220,11 @@ public class BoardTest {
         for (int i = 0; i < path.length; i++) {
             List<Board> neighbors = (List<Board>) previous.neighbors();
             Board b = neighbors.get(pathNeighborIndices[i]);
-            assertEquals(path[i], b);
-            assertEquals(path[i].hamming(), b.hamming());
-            assertEquals(path[i].manhattan(), b.manhattan());
+            assertEquals("Problem at path step " + i,path[i], b);
+            assertEquals("Problem at path step " + i,path[i].hamming(), b.hamming());
+            assertEquals("Problem at path step " + i,path[i].manhattan(), b.manhattan());
             previous = b;
         }
-        
     }
 
 }

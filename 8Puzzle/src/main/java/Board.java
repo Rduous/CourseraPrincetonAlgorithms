@@ -10,19 +10,26 @@ public class Board {
     private final short[][] blocks;
     private int hamming = -1;
     private int manhattan = -1;
+    private int zeroRow = -1;
+    private int zeroCol = -1;
 
     public Board(int[][] blocks) {
         n = blocks.length;
         this.blocks = new short[n][n];
         for (int i = 0; i < blocks.length; i++) {
             for (int j = 0; j < n; j++) {
-                this.blocks[i][j] = (short) blocks[i][j];
+                int val = blocks[i][j];
+                if (val == 0) {
+                    zeroRow = i;
+                    zeroCol = j;
+                }
+                this.blocks[i][j] = (short) val;
             }
         }
         highestNum = (int) (Math.pow(n, 2) - 1);
     }
     
-    private Board(short[][] blocks, int hamming, int manhattan) {
+    private Board(short[][] blocks, int hamming, int manhattan, int zeroRow, int zeroCol) {
         n = blocks.length;
         this.blocks = new short[n][n];
         for (int i = 0; i < blocks.length; i++) {
@@ -33,26 +40,27 @@ public class Board {
         highestNum = (int) (Math.pow(n, 2) - 1);
         this.hamming = hamming;
         this.manhattan = manhattan;
+        this.zeroRow = zeroRow;
+        this.zeroCol = zeroCol;
     }
 
     public int dimension() {
         return n;
-        // board dimension N
     }
 
     public int hamming() {
-//        if (hamming == -1) {
-//            hamming = calcHamming();
-//        }
-//        return hamming;
-//        
-//    }
-//
-//    private int calcHamming() {
+        if (hamming == -1) {
+            hamming = calcHamming();
+        }
+        return hamming;
+        
+    }
+
+    private int calcHamming() {
         int result = 0;
         for (int i = 0; i <= highestNum; i++) {
-            int row = rowFor(i);
-            int col = colFor(i);
+            int row = rowForIndex(i);
+            int col = colForIndex(i);
             int expected = i + 1;
             int actual = blocks[row][col];
             if (actual != expected && actual != 0) {
@@ -63,22 +71,22 @@ public class Board {
     }
 
     public int manhattan() {
-//        if (manhattan == -1) {
-//            manhattan = calcManhattan();
-//        }
-//        return manhattan;
-//    }
-//    
-//    private int calcManhattan() {
+        if (manhattan == -1) {
+            manhattan = calcManhattan();
+        }
+        return manhattan;
+    }
+    
+    private int calcManhattan() {
         int result = 0;
         for (int i = 0; i <= highestNum; i++) {
-            int row = rowFor(i);
-            int col = colFor(i);
+            int row = rowForIndex(i);
+            int col = colForIndex(i);
             int expected = i + 1;
             int actual = blocks[row][col];
             if (actual != expected && actual != 0) {
-                int goalRow = rowFor(actual - 1);
-                int goalCol = colFor(actual - 1);
+                int goalRow = rowForIndex(actual - 1);
+                int goalCol = colForIndex(actual - 1);
                 result += Math.abs(goalRow - row) + Math.abs(goalCol - col);
             }
         }
@@ -88,18 +96,18 @@ public class Board {
     public boolean isGoal() {
         boolean isGoal = true;
         for (int i = 0; i < highestNum && isGoal; i++) {
-            isGoal &= blocks[rowFor(i)][colFor(i)] == i + 1;
+            isGoal &= blocks[rowForIndex(i)][colForIndex(i)] == i + 1;
         }
         return isGoal;
     }
 
     public Board twin() {
-        Board twin = new Board(blocks, hamming, manhattan);
+        Board twin = new Board(blocks, hamming, manhattan, zeroRow, zeroCol);
         for (int i = 0; i < n; i++) {
             if (blocks[i][0] != 0 && blocks[i][1] != 0) {
                 twin.swap(i, 0, i, 1);
-//                twin.hamming = twin.calcHamming();
-//                twin.manhattan = twin.calcManhattan();
+                twin.hamming = twin.calcHamming();
+                twin.manhattan = twin.calcManhattan();
                 break;
             }
         }
@@ -109,25 +117,31 @@ public class Board {
     private void swap(int row1, int col1, int row2, int col2) {
         short val1 = blocks[row1][col1];
         short val2 = blocks[row2][col2];
-//        if (val1 != 0) {
-//            updateDistances(row1, col1, row2, col2, val1);
-//        }
-//        if (val2 != 0) {
-//            updateDistances(row2, col2, row1, col1, val2);
-//        }
+        if (val1 != 0) {
+            updateDistances(row1, col1, row2, col2, val1);
+        } else {
+            zeroRow = row2;
+            zeroCol = col2;
+        }
+        if (val2 != 0) {
+            updateDistances(row2, col2, row1, col1, val2);
+        } else {
+            zeroRow = row1;
+            zeroCol = col2;
+        }
         blocks[row1][col1] = val2;
         blocks[row2][col2] = val1;
     }
 
     private void updateDistances(int fromRow, int fromCol, int toRow, int toCol,
             short val) {
-        int homeRow = rowFor(val);
-        int homeCol = colFor(val);
+        int homeRow = rowForIndex(val-1);
+        int homeCol = colForIndex(val-1);
         if (fromRow == homeRow && fromCol == homeCol) {
             //it's moving away from home
             hamming = hamming() + 1;
             manhattan = manhattan() + 1;
-        } else if (toRow == homeRow && toCol == homeRow) {
+        } else if (toRow == homeRow && toCol == homeCol) {
             //it's moving to home
             hamming = hamming() - 1;
             manhattan = manhattan() - 1;
@@ -158,34 +172,24 @@ public class Board {
     public Iterable<Board> neighbors() {
         ArrayList<Board> neighbors = new ArrayList<Board>();
 
-        int i = 0;
-        int row = 0;
-        int col = 0;
-        for (; i < highestNum + 1; i++) {
-            row = rowFor(i);
-            col = colFor(i);
-            if (blocks[row][col] == 0) {
-                break;
-            }
-        }
-        if (col > 0) {
-            Board b = new Board(blocks, hamming, manhattan);
-            b.swap(row, col, row, col - 1);
+        if (zeroCol > 0) {
+            Board b = new Board(blocks, hamming, manhattan, zeroRow, zeroCol);
+            b.swap(zeroRow, zeroCol, zeroRow, zeroCol - 1);
             neighbors.add(b);
         }
-        if (col < n - 1) {
-            Board b = new Board(blocks, hamming, manhattan);
-            b.swap(row, col, row, col + 1);
+        if (zeroCol < n - 1) {
+            Board b = new Board(blocks, hamming, manhattan, zeroRow, zeroCol);
+            b.swap(zeroRow, zeroCol, zeroRow, zeroCol + 1);
             neighbors.add(b);
         }
-        if (row > 0) {
-            Board b = new Board(blocks, hamming, manhattan);
-            b.swap(row, col, row - 1, col);
+        if (zeroRow > 0) {
+            Board b = new Board(blocks, hamming, manhattan, zeroRow, zeroCol);
+            b.swap(zeroRow, zeroCol, zeroRow - 1, zeroCol);
             neighbors.add(b);
         }
-        if (row < n - 1) {
-            Board b = new Board(blocks, hamming, manhattan);
-            b.swap(row, col, row + 1, col);
+        if (zeroRow < n - 1) {
+            Board b = new Board(blocks, hamming, manhattan, zeroRow, zeroCol);
+            b.swap(zeroRow, zeroCol, zeroRow + 1, zeroCol);
             neighbors.add(b);
         }
         return neighbors;
@@ -205,11 +209,11 @@ public class Board {
         return b.toString();
     }
 
-    private int colFor(int i) {
+    private int colForIndex(int i) {
         return i % n;
     }
 
-    private int rowFor(int i) {
+    private int rowForIndex(int i) {
         return i / n;
     }
 }
