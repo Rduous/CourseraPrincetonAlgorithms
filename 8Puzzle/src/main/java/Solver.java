@@ -5,18 +5,17 @@ import java.util.Objects;
 
 public class Solver {
   
-    private final int moves;
-    private final List<Board> solution;
+    private static final int TWIN_PENALTY_AMOUNT = 10;
+    private int moves;
+    private List<Board> solution;
 
     public Solver(Board initial) {
         Node previous = null;
-        Node previousTwin = null;
         
         MinPQ<Node> queue = new MinPQ<Node>(getComparator());
-        MinPQ<Node> twinQueue = new MinPQ<Node>(getComparator());
         
         queue.insert(new Node(initial, null, 0));
-        twinQueue.insert(new Node(initial.twin(), null, 0));
+        queue.insert(new Node(initial.twin(), null, 0, TWIN_PENALTY_AMOUNT));
         
         boolean solved = false;
         while (!solved && !queue.isEmpty()) {
@@ -24,10 +23,6 @@ public class Solver {
             
             solved = previous.board.isGoal();
             if (solved) {
-                break;
-            }
-            previousTwin = checkQueue( twinQueue );
-            if (previousTwin.board.isGoal()) {
                 break;
             }
         }
@@ -45,6 +40,10 @@ public class Solver {
             moves = path.size() - 1;
             for (int i=moves; i >= 0; i--) {
                 solution.add(path.get(i));
+            }
+            if ( ! solution.contains(initial)) {
+                solution = null;
+                moves = -1;
             }
         }
     }
@@ -116,12 +115,20 @@ public class Solver {
         int moves;
         int rating;
         int priority;
+        
         public Node(Board board, Node cameFrom, int moves) {
             this.board = board;
             this.cameFrom = cameFrom;
             this.moves = moves;
             this.rating = board.manhattan();
-            this.priority = moves + rating;
+            this.priority = moves + rating ;
+        }
+        public Node(Board board, Node cameFrom, int moves, int penalty) {
+            this.board = board;
+            this.cameFrom = cameFrom;
+            this.moves = moves;
+            this.rating = board.manhattan();
+            this.priority = moves + rating + penalty;
         }
         
         @Override
