@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class BoardTest {
@@ -198,6 +199,31 @@ public class BoardTest {
         for (Board board : neighborsOfFinal) {
             assertNotEquals(twinOfFinal, board);
         }
+    }
+    
+    @Test
+    @Ignore
+    public void testManhattanAndHammingOnSequenceOfMoves() {
+        int[] pathNeighborIndices = {0,0,1,1,2,2,0,1};
+        Board previous = finalBoard;
+        Board path1 = new Board(new int[][] {{1, 2, 3}, {4, 5, 0}, {7, 8, 6}});
+        Board path2 = new Board(new int[][] {{1, 2, 0}, {4, 5, 3}, {7, 8, 6}});
+        Board path3 = new Board(new int[][] {{1, 0, 2}, {4, 5, 3}, {7, 8, 6}});
+        Board path4 = new Board(new int[][] {{0, 1, 2}, {4, 5, 3}, {7, 8, 6}});
+        Board path5 = new Board(new int[][] {{1, 0, 2}, {4, 5, 3}, {7, 8, 6}});
+        Board path6 = new Board(new int[][] {{1, 2, 0}, {4, 5, 3}, {7, 8, 6}});
+        Board path7 = new Board(new int[][] {{1, 2, 3}, {4, 5, 0}, {7, 8, 6}});
+        Board path8 = finalBoard;
+        Board[] path = {path1, path2, path3, path4, path5, path6, path7, path8};
+        for (int i = 0; i < path.length; i++) {
+            List<Board> neighbors = (List<Board>) previous.neighbors();
+            Board b = neighbors.get(pathNeighborIndices[i]);
+            assertEquals(path[i], b);
+            assertEquals(path[i].hamming(), b.hamming());
+            assertEquals(path[i].manhattan(), b.manhattan());
+            previous = b;
+        }
+        
     }
 
 }

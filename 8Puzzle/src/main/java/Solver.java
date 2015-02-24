@@ -26,13 +26,13 @@ public class Solver {
         
         boolean solved = false;
         while (!solved && !queue.isEmpty()) {
-            previous = checkQueue(previous, queue);//, alreadySeen);
+            previous = checkQueue( queue, false);//, alreadySeen);
             
             solved = previous.board.isGoal();
             if (solved) {
                 break;
             }
-            previousTwin = checkQueue(previousTwin, twinQueue);//, alreadySeenTwin);
+            previousTwin = checkQueue( twinQueue, false);//, alreadySeenTwin);
             if (previousTwin.board.isGoal()) {
                 break;
             }
@@ -55,20 +55,28 @@ public class Solver {
         }
     }
 
-    private Node checkQueue(Node previous, MinPQ<Node> queue) {//, Set<Node> alreadySeen) {
+    private Node checkQueue(MinPQ<Node> queue, boolean printOutput) {//, Set<Node> alreadySeen) {
         Node searchNode = queue.delMin();
         // add this node to tree
+        if (printOutput) {
+            System.out.println("Selected: " + searchNode);
+        }
         if (searchNode.board.isGoal()) {
             return searchNode;
         }
         int moves = searchNode.moves + 1;
         Iterable<Board> neighbors = searchNode.board.neighbors();
         for (Board board : neighbors) {
-            if (!board.equals(previous)) {
-                Node newNode = new Node(board, searchNode, moves);
+            Node newNode = new Node(board, searchNode, moves);
+            if (searchNode.cameFrom == null || ! newNode.board.equals(searchNode.cameFrom.board)) {
+                if (printOutput) {
+                    System.out.println("Inserting: " + newNode.toString());
+                }
 //                if ( alreadySeen.add(newNode)) {
-                    queue.insert(newNode);
+                queue.insert(newNode);
 //                }
+            } else if (printOutput) {
+                System.out.println("Not inserting: " + newNode.toString());
             }
         }
         
@@ -114,7 +122,7 @@ public class Solver {
         return new Comparator<Node>() {
 
             public int compare(Node o1, Node o2) {
-                return Integer.compare(o1.board.manhattan() + o1.moves, o2.board.manhattan() + o2.moves);
+                return Integer.compare(o1.priority, o2.priority);
             }
         };
     }
@@ -124,15 +132,22 @@ public class Solver {
         Board board;
         Node cameFrom;
         int moves;
+        int rating;
+        int priority;
         public Node(Board board, Node cameFrom, int moves) {
             this.board = board;
             this.cameFrom = cameFrom;
             this.moves = moves;
+            this.rating = board.manhattan();
+            this.priority = moves + rating;
         }
         
         @Override
         public String toString() {
-            return board.toString();
+            StringBuilder b = new StringBuilder();
+            b.append(board.manhattan()).append(" + ").append( moves).append(" moves = ").append( priority ).append("\n");
+            b.append(board.toString());
+            return b.toString();
         }
         
         @Override
