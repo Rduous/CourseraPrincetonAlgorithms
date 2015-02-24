@@ -1,69 +1,76 @@
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class Solver {
     
 
     private final int moves;
-    private final List<Board> solution = new ArrayList<Board>();
+    private final List<Board> solution;
 
     public Solver(Board initial) {
-        Board previous = null;
-        Board previousTwin = null;
-                
-        Map<Board, Board> cameFrom = new HashMap<Board, Board>();
+        Node previous = null;
+        Node previousTwin = null;
         
-        MinPQ<Board> queue = new MinPQ<Board>(getComparator());
-        MinPQ<Board> twinQueue = new MinPQ<Board>(getComparator());
+//        Set<Node> alreadySeen = new HashSet<Solver.Node>();
+//        Set<Node> alreadySeenTwin = new HashSet<Solver.Node>();
+        MinPQ<Node> queue = new MinPQ<Node>(getComparator());
+        MinPQ<Node> twinQueue = new MinPQ<Node>(getComparator());
         
-        queue.insert(initial);
-        twinQueue.insert(initial.twin());
+        queue.insert(new Node(initial, null, 0));
+        twinQueue.insert(new Node(initial.twin(), null, 0));
         
         boolean solved = false;
         while (!solved && !queue.isEmpty()) {
             
-            Board next = checkQueue(previous, queue);
-            cameFrom.put(next, previous);
-            previous = next;
+            previous = checkQueue(previous, queue);//, alreadySeen);
             
-            solved = previous.isGoal();
+            solved = previous.board.isGoal();
             if (solved) {
                 break;
             }
-            previousTwin = checkQueue(previousTwin, twinQueue);
-            if (previousTwin.isGoal()) {
+            previousTwin = checkQueue(previousTwin, twinQueue);//, alreadySeenTwin);
+            if (previousTwin.board.isGoal()) {
                 break;
             }
         }
         
         if (solved == false) {
+            solution = null;
             moves = -1;
         } else {
+            solution = new ArrayList<Board>(); 
             List<Board> path = new ArrayList<Board>();
             while (previous != null) {
-                path.add(previous);
-                previous = cameFrom.get(previous);
+                path.add(previous.board);
+                previous = previous.cameFrom;
             }
             moves = path.size() - 1;
-            for (int i=moves -1; i >= 0; i--) {
+            for (int i=moves; i >= 0; i--) {
                 solution.add(path.get(i));
             }
         }
     }
 
-    private Board checkQueue(Board previous, MinPQ<Board> queue) {
-        Board searchNode = queue.delMin();
+    private Node checkQueue(Node previous, MinPQ<Node> queue) {//, Set<Node> alreadySeen) {
+        Node searchNode = queue.delMin();
         // add this node to tree
-        if (searchNode.isGoal()) {
+        if (searchNode.board.isGoal()) {
             return searchNode;
         }
-        Iterable<Board> neighbors = searchNode.neighbors();
+        int moves = searchNode.moves + 1;
+        Iterable<Board> neighbors = searchNode.board.neighbors();
         for (Board board : neighbors) {
             if (!board.equals(previous)) {
-                queue.insert(board);
+                Node newNode = new Node(board, searchNode, moves);
+//                if ( alreadySeen.add(newNode)) {
+                    queue.insert(newNode);
+//                }
             }
         }
         
@@ -105,12 +112,43 @@ public class Solver {
         }
     }
 
-    private Comparator<Board> getComparator() {
-        return new Comparator<Board>() {
+    private Comparator<Node> getComparator() {
+        return new Comparator<Node>() {
 
-            public int compare(Board o1, Board o2) {
-                return Integer.compare(o1.manhattan(), o2.manhattan());
+            public int compare(Node o1, Node o2) {
+                return Integer.compare(o1.board.manhattan() + o1.moves, o2.board.manhattan() + o2.moves);
             }
         };
+    }
+    
+    private static class Node {
+        
+        Board board;
+        Node cameFrom;
+        int moves;
+        public Node(Board board, Node cameFrom, int moves) {
+            this.board = board;
+            this.cameFrom = cameFrom;
+            this.moves = moves;
+        }
+        
+        @Override
+        public String toString() {
+            return board.toString();
+        }
+        
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null) return false;
+            if (! (obj instanceof Node)) return false;
+            Node other = (Node) obj;
+            return Objects.equals(board, other.board);
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(board);
+        }
+        
     }
 }

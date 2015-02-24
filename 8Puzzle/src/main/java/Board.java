@@ -65,6 +65,7 @@ public class Board {
         for (int i = 0; i < n; i++) {
             if (blocks[i][0] != 0 && blocks[i][1] != 0) {
                 twin.swap(i, 0, i, 1);
+                break;
             }
         }
         return twin;
@@ -127,13 +128,14 @@ public class Board {
     }
 
     public String toString() {
+        int formatNum = Integer.toString(highestNum).length();
         StringBuilder b = new StringBuilder();
         b.append(n);
         for (int i = 0; i < blocks.length; i++) {
             b.append("\n");
             for (int j = 0; j < n; j++) {
                 b.append(" ");
-                b.append(String.format("%2d", blocks[i][j]));
+                b.append(String.format("%" + formatNum + "d", blocks[i][j]));
             }
         }
         return b.toString();
