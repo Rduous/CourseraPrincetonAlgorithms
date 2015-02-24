@@ -9,7 +9,8 @@ import java.util.Set;
 
 public class Solver {
     
-
+    private static Map<Node, Integer> priority = new HashMap<Solver.Node, Integer>();
+  
     private final int moves;
     private final List<Board> solution;
 
@@ -17,8 +18,6 @@ public class Solver {
         Node previous = null;
         Node previousTwin = null;
         
-//        Set<Node> alreadySeen = new HashSet<Solver.Node>();
-//        Set<Node> alreadySeenTwin = new HashSet<Solver.Node>();
         MinPQ<Node> queue = new MinPQ<Node>(getComparator());
         MinPQ<Node> twinQueue = new MinPQ<Node>(getComparator());
         
@@ -27,7 +26,6 @@ public class Solver {
         
         boolean solved = false;
         while (!solved && !queue.isEmpty()) {
-            
             previous = checkQueue(previous, queue);//, alreadySeen);
             
             solved = previous.board.isGoal();
@@ -149,6 +147,5 @@ public class Solver {
         public int hashCode() {
             return Objects.hash(board);
         }
-        
     }
 }

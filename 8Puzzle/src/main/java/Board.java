@@ -1,18 +1,32 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 
 public class Board {
-
+    
     private final int highestNum;
     private final int n;
-    private final int[][] blocks;
+    private final short[][] blocks;
 
     public Board(int[][] blocks) {
         n = blocks.length;
-        this.blocks = new int[n][];
+        this.blocks = new short[n][];
         for (int i = 0; i < blocks.length; i++) {
-            this.blocks[i] = Arrays.copyOf(blocks[i], n);
+            for (int j = 0; j < n; j++) {
+                this.blocks[i][j] = (short) blocks[i][j];
+            }
+        }
+        highestNum = (int) (Math.pow(n, 2) - 1);
+    }
+    
+    private Board(short[][] blocks) {
+        n = blocks.length;
+        this.blocks = new short[n][];
+        for (int i = 0; i < blocks.length; i++) {
+            for (int j = 0; j < n; j++) {
+                this.blocks[i][j] = blocks[i][j];
+            }
         }
         highestNum = (int) (Math.pow(n, 2) - 1);
     }
@@ -72,7 +86,7 @@ public class Board {
     }
 
     private void swap(int row1, int col1, int row2, int col2) {
-        int val = blocks[row1][col1];
+        short val = blocks[row1][col1];
         blocks[row1][col1] = blocks[row2][col2];
         blocks[row2][col2] = val;
     }
