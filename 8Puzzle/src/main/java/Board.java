@@ -146,12 +146,13 @@ public class Board {
             hamming = hamming() - 1;
             manhattan = manhattan() - 1;
         } else {
+            //other move
             //no change in hamming
             if (Math.abs(fromRow - homeRow) > Math.abs(toRow - homeRow) || Math.abs(fromCol - homeCol) > Math.abs(toCol - homeCol)) {
                 manhattan = manhattan() - 1;
             } else if (Math.abs(fromRow - homeRow) < Math.abs(toRow - homeRow) || Math.abs(fromCol - homeCol) < Math.abs(toCol - homeCol)) {
                 manhattan = manhattan() + 1;
-            }
+            } //else no change in manhattan either.
         }
     }
 

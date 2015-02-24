@@ -1,15 +1,9 @@
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public class Solver {
-    
-    private static Map<Node, Integer> priority = new HashMap<Solver.Node, Integer>();
   
     private final int moves;
     private final List<Board> solution;
@@ -26,13 +20,13 @@ public class Solver {
         
         boolean solved = false;
         while (!solved && !queue.isEmpty()) {
-            previous = checkQueue( queue, false);//, alreadySeen);
+            previous = checkQueue( queue);
             
             solved = previous.board.isGoal();
             if (solved) {
                 break;
             }
-            previousTwin = checkQueue( twinQueue, false);//, alreadySeenTwin);
+            previousTwin = checkQueue( twinQueue );
             if (previousTwin.board.isGoal()) {
                 break;
             }
@@ -55,12 +49,8 @@ public class Solver {
         }
     }
 
-    private Node checkQueue(MinPQ<Node> queue, boolean printOutput) {//, Set<Node> alreadySeen) {
+    private Node checkQueue(MinPQ<Node> queue) {
         Node searchNode = queue.delMin();
-        // add this node to tree
-        if (printOutput) {
-            System.out.println("Selected: " + searchNode);
-        }
         if (searchNode.board.isGoal()) {
             return searchNode;
         }
@@ -69,17 +59,9 @@ public class Solver {
         for (Board board : neighbors) {
             Node newNode = new Node(board, searchNode, moves);
             if (searchNode.cameFrom == null || ! newNode.board.equals(searchNode.cameFrom.board)) {
-                if (printOutput) {
-                    System.out.println("Inserting: " + newNode.toString());
-                }
-//                if ( alreadySeen.add(newNode)) {
                 queue.insert(newNode);
-//                }
-            } else if (printOutput) {
-                System.out.println("Not inserting: " + newNode.toString());
-            }
+            } 
         }
-        
         return searchNode;
     }
 
