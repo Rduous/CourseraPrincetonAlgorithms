@@ -27,6 +27,8 @@ public class Board {
             }
         }
         highestNum = (int) (Math.pow(n, 2) - 1);
+        hamming = calcHamming();
+        manhattan = calcManhattan();
     }
     
     private Board(short[][] blocks, int hamming, int manhattan, int zeroRow, int zeroCol) {
@@ -49,9 +51,6 @@ public class Board {
     }
 
     public int hamming() {
-        if (hamming == -1) {
-            hamming = calcHamming();
-        }
         return hamming;
         
     }
@@ -71,9 +70,6 @@ public class Board {
     }
 
     public int manhattan() {
-        if (manhattan == -1) {
-            manhattan = calcManhattan();
-        }
         return manhattan;
     }
     
