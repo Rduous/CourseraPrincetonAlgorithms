@@ -18,13 +18,18 @@ public class Solver {
         queue.insert(new Node(initial.twin(), null, 0, TWIN_PENALTY_AMOUNT));
         
         boolean solved = false;
+        int count = 0;
         while (!solved && !queue.isEmpty()) {
+            if (count % 100000 == 1) {
+                System.out.println("Steps: " + count + "; queue size: " + queue.size() + "; current priority: " + previous.priority + "; current moves: " + previous.moves);
+            }
             previous = checkQueue( queue);
             
             solved = previous.board.isGoal();
             if (solved) {
                 break;
             }
+            count++;
         }
         
         if (solved == false) {
@@ -103,6 +108,9 @@ public class Solver {
         return new Comparator<Node>() {
 
             public int compare(Node o1, Node o2) {
+                if (o1.priority == o2.priority) {
+                    return Integer.compare(o1.rating, o2.rating);
+                }
                 return Integer.compare(o1.priority, o2.priority);
             }
         };
