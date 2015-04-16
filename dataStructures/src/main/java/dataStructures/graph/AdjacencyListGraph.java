@@ -6,28 +6,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AdjacencyListGraph implements WeightedGraph {
+public class AdjacencyListGraph<T> implements WeightedGraph<T> {
 	
-	private final Map<Vertex, List<Edge>> adjacencyLists;
-	private final Map<Integer, Vertex> vertexMap;
+	private final Map<Vertex<T>, List<Edge<T>>> adjacencyLists;
+	private final Map<T, Vertex<T>> vertexMap;
 	private int numEdges = 0;
 	
-	public AdjacencyListGraph(int numVertices) {
-		adjacencyLists = new HashMap<Vertex, List<Edge>>(numVertices);
-		vertexMap = new HashMap<Integer, WeightedGraph.Vertex>();
-		for (int i = 0; i < numVertices; i++) {
-			adjacencyLists.put(new Vertex(i), new ArrayList<Edge>());
-			vertexMap.put(i, new Vertex(i));
+	public AdjacencyListGraph(Collection<T> vertices) {
+		adjacencyLists = new HashMap<Vertex<T>, List<Edge<T>>>(vertices.size());
+		vertexMap = new HashMap<T, Vertex<T>>();
+		for (T t : vertices) {
+			adjacencyLists.put(new Vertex<T>(t), new ArrayList<Edge<T>>());
+			vertexMap.put(t, new Vertex<T>(t));
 		}
 	}
 
-	public Collection<Edge> getEdges(int v) {
-		return new ArrayList<WeightedGraph.Edge>(adjacencyLists.get(v));
+	public Collection<Edge<T>> getEdges(T v) {
+		return new ArrayList<Edge<T>>(adjacencyLists.get(v));
 	}
 
-	public void addEdge(int v, int w, int weight) {
-		adjacencyLists.get(v).add(new Edge(vertexMap.get(w), weight));
-		adjacencyLists.get(w).add(new Edge(vertexMap.get(v), weight));
+	public void addEdge(T v, T w, int weight) {
+		adjacencyLists.get(v).add(new Edge<T>(vertexMap.get(w), weight));
+		adjacencyLists.get(w).add(new Edge<T>(vertexMap.get(v), weight));
 		numEdges++;
 	}
 
@@ -39,8 +39,7 @@ public class AdjacencyListGraph implements WeightedGraph {
 		return numEdges;
 	}
 
-	@Override
-	public Vertex get(int v) {
+	public Vertex<T> get(T v) {
 		return vertexMap.get(v);
 	}
 

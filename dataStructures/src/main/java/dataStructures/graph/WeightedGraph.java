@@ -3,22 +3,22 @@ package dataStructures.graph;
 import java.util.Collection;
 import java.util.Objects;
 
-public interface WeightedGraph {
+public interface WeightedGraph<T> {
 	
-	Collection<Edge> getEdges(int v);
-	void addEdge(int v, int w, int weight);
+	Collection<Edge<T>> getEdges(T v);
+	void addEdge(T v, T w, double weight);
 	int numVertices();
 	int numEdges();
-	Vertex get(int v);
+	Vertex<T> get(T v);
 	
-	public static class Edge {
-		Vertex nextV;
+	public static class Edge<T> {
+		Vertex<T> nextV;
 		int weight;
-		public Edge(Vertex nextV, int weight) {
+		public Edge(Vertex<T> nextV, int weight) {
 			this.nextV = nextV;
 			this.weight = weight;
 		}
-		public Vertex getVertex() {
+		public Vertex<T> getVertex() {
 			return nextV;
 		}
 		public int getWeight() {
@@ -26,13 +26,13 @@ public interface WeightedGraph {
 		}
 	}
 	
-	public static class Vertex {
+	public static class Vertex<T> {
 		
-		int value;
-		int distance = Integer.MAX_VALUE;
-		public Vertex previous = null;
+		T value;
+		double distance = Double.MAX_VALUE;
+		public Vertex<T> previous = null;
 		
-		public Vertex(int value) {
+		public Vertex(T value) {
 			this.value = value;
 		}
 		
@@ -46,7 +46,7 @@ public interface WeightedGraph {
 			if (this == obj) return true;
 			if (obj == null) return false;
 			if (obj instanceof Vertex) {
-				Vertex other = (Vertex) obj;
+				Vertex<?> other = (Vertex<?>) obj;
 				return Objects.equals(value, other.value);
 			}
 			return false;

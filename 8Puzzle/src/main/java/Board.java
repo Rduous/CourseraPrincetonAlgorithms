@@ -133,22 +133,19 @@ public class Board {
             short val) {
         int homeRow = rowForIndex(val-1);
         int homeCol = colForIndex(val-1);
+        
+        //update hamming
         if (fromRow == homeRow && fromCol == homeCol) {
-            //it's moving away from home
             hamming = hamming() + 1;
-            manhattan = manhattan() + 1;
         } else if (toRow == homeRow && toCol == homeCol) {
-            //it's moving to home
             hamming = hamming() - 1;
-            manhattan = manhattan() - 1;
-        } else {
-            //other move
-            //no change in hamming
-            if (Math.abs(fromRow - homeRow) > Math.abs(toRow - homeRow) || Math.abs(fromCol - homeCol) > Math.abs(toCol - homeCol)) {
-                manhattan = manhattan() - 1;
-            } else if (Math.abs(fromRow - homeRow) < Math.abs(toRow - homeRow) || Math.abs(fromCol - homeCol) < Math.abs(toCol - homeCol)) {
-                manhattan = manhattan() + 1;
-            } //else no change in manhattan either.
+        }
+        
+        //update manhattan
+        if (Math.abs(fromRow - homeRow) > Math.abs(toRow - homeRow) || Math.abs(fromCol - homeCol) > Math.abs(toCol - homeCol)) {
+            manhattan--;
+        } else if (Math.abs(fromRow - homeRow) < Math.abs(toRow - homeRow) || Math.abs(fromCol - homeCol) < Math.abs(toCol - homeCol)) {
+            manhattan++;
         }
     }
 
